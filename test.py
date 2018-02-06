@@ -4,27 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from sklearn.preprocessing import OneHotEncoder
 
-data = loadmat('data/ex3data1.mat')
-X = data['X']
-y = data['y']
-input_size = 400
-hidden_size = 25
-num_labels = 10
-learning_rate = 1
 
-m = X.shape[0]
-X = np.matrix(X)
-y = np.matrix(y)
-params = (np.random.random(size=hidden_size * (input_size + 1) + num_labels * (hidden_size + 1)) - 0.5) * 0.25
-
-# unravel the parameter array into parameter matrices for each layer
-theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
-theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
-
-
-encoder = OneHotEncoder(sparse=False)
-y_onehot = encoder.fit_transform(y)
-y_onehot.shape
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -125,18 +105,40 @@ def backprop(params, input_size, hidden_size, num_labels, X, y, learning_rate):
 
     return J, grad
 
-from scipy.optimize import minimize
+if __name__ == '__main__':
 
+    from scipy.optimize import minimize
+    data = loadmat('data/ex3data1.mat')
+    X = data['X']
+    y = data['y']
+    input_size = 400
+    hidden_size = 25
+    num_labels = 10
+    learning_rate = 1
+
+    m = X.shape[0]
+    X = np.matrix(X)
+    y = np.matrix(y)
+    params = (np.random.random(size=hidden_size * (input_size + 1) + num_labels * (hidden_size + 1)) - 0.5) * 0.25
+
+    # unravel the parameter array into parameter matrices for each layer
+    theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
+    theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+
+
+    encoder = OneHotEncoder(sparse=False)
+    y_onehot = encoder.fit_transform(y)
 # minimize the objective function
-fmin = minimize(fun=backprop, x0=params, args=(input_size, hidden_size, num_labels, X, y_onehot, learning_rate),
-                method='TNC', jac=True, options={'maxiter': 250})
-X = np.matrix(X)
-theta1 = np.matrix(np.reshape(fmin.x[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
-theta2 = np.matrix(np.reshape(fmin.x[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+    fmin = minimize(fun=backprop, x0=params, args=(input_size, hidden_size, num_labels, X, y_onehot, learning_rate),
+                     method='TNC', jac=True, options={'maxiter': 250})
+    X = np.matrix(X)
+    theta1 = np.matrix(np.reshape(fmin.x[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
+    theta2 = np.matrix(np.reshape(fmin.x[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
 
-a1, z2, a2, z3, h = forward_propagate(X, theta1, theta2)
-y_pred = np.array(np.argmax(h, axis=1) + 1)
+    a1, z2, a2, z3, h = forward_propagate(X, theta1, theta2)
+    y_pred = np.array(np.argmax(h, axis=1) + 1)
 
-
-
+    correct = [1 if a == b else 0 for (a, b) in zip(y_pred, y)]
+    accuracy = (np.sum(map(int, correct)) / float(len(correct)))
+    print('accuracy = {0}%'.format(accuracy * 100))
 
