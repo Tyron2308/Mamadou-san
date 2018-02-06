@@ -12,6 +12,16 @@ hidden_size = 25
 num_labels = 10
 learning_rate = 1
 
+m = X.shape[0]
+X = np.matrix(X)
+y = np.matrix(y)
+params = (np.random.random(size=hidden_size * (input_size + 1) + num_labels * (hidden_size + 1)) - 0.5) * 0.25
+
+# unravel the parameter array into parameter matrices for each layer
+theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
+theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+
+
 encoder = OneHotEncoder(sparse=False)
 y_onehot = encoder.fit_transform(y)
 y_onehot.shape
