@@ -7,6 +7,9 @@ import sys
 import skimage.io as io
 import matplotlib.pyplot as plt
 
+class OnehotEncoder:
+    def toOnehot(self):
+        return
 
 class Opti:
     @staticmethod
@@ -14,10 +17,13 @@ class Opti:
         z = numpy.zeros_like(input_map, dtype=numpy.float64)
         r = numpy.where(input_map > z, input_map, z)
         return r.reshape((z.shape[1], z.shape[0], z.shape[2]))
+    @staticmethod
+    def reelu_activation2(input_map):
+        z = numpy.zeros_like(input_map, dtype=numpy.float64)
+        return numpy.where(input_map > z, input_map, z)
 
     @staticmethod
     def sigmoid(x):
-        #return 1/1 + numpy.exp(-input_map)
         slope = 0.2
         shift = 0.5
         x = (x * slope) + shift
@@ -111,33 +117,47 @@ class Mamadou:
 
     def train(self, train_test, iter_max, pass_to_execute, label):
         idx = 0
+        print('LABEL ', label.shape)
         output = numpy.array(train_test, dtype=numpy.float64)
+        c = []
         while idx < iter_max:
             for count, img in enumerate(train_test):
                 print('image number', count)
-                output[count], cost = numpy.reshape(pass_to_execute(img, label[count]),
-                                              img.shape)
+                test = numpy.matrix(Helper.rgb2gray(img))
+                print('test===', test, 'imgg====', img)
+                print(test.shape)
+                output1, cost = pass_to_execute(test, label[count])
+                output[count] = numpy.reshape(output1, img.shape)
+                c.append(cost)
             idx = idx + 1
-        
-        plt.plot(cost)
-        plt.ylabel('test')
-        plt.show()
+    #    c1 = self.mamadou.neural.replace_zeroes(numpy.array(c))
+    #    c2 = numpy.reshape(c1, (2, 25000))
+
+        print('weight===', self.mamadou.neural.weight)
+        #print('cost====', c2, c2.shape)
+        #plt.plot(c2)
+        #plt.ylabel(train_test[0])
+        #plt.show()
 
     def predict(self, input_map):
+        output = self.mamadou.neural.replace_zeroes(input_map)
         weight_tmp = self.mamadou.neural.weight
         reshaped = numpy.reshape(weight_tmp, (2, 5, 5, 3))
-        a1 = numpy.dot(numpy.transpose(reshaped[0]), input_map)
-        activated = Opti.sigmoid(a1)
+        a1 = numpy.dot(numpy.transpose(reshaped[0]), output)
+        output = self.mamadou.neural.replace_zeroes(a1)
+        activated = Opti.reelu_activation2(output)
         a1 = numpy.dot(numpy.transpose(reshaped[1]), activated)
-        probability = Opti.sigmoid(a1)
+        output = self.mamadou.neural.replace_zeroes(a1)
+        probability = Opti.reelu_activation2(output)
         v = self.mamadou.softmax(probability)
+
+        print('response softmax', v)
         return numpy.max(v)
 
     def forward_pass(self, input_map, labels):
-        output = self.mamadou.conv_layer(input_map, Opti.reelu_activation)
-        output = self.mamadou.conv_layer(output, Opti.reelu_activation)
+        output = self.mamadou.conv_layer(input_map, Opti.reelu_activation2)
+        output = self.mamadou.conv_layer(output, Opti.reelu_activation2)
         output = self.mamadou.pool_layer(output, True)
-        output = self.mamadou.drop_out(output, True)
         output, cost = self.mamadou.dense_layer(output, labels, Opti.sigmoid, 0.01, 0.01)
         return output, cost
 
@@ -150,16 +170,26 @@ class Mamadou:
 class LightNN:
 
     def __init__(self, sze_input, number_hidden):
+        params = (numpy.random.random(number_hidden * (sze_input + 1) + 10 * (number_hidden +1)))
+
+        print(params.shape)
         self.weight = numpy.random.random_sample((number_hidden, sze_input))
 
-        print(self.weight.shape, self.weight)
+        self.theta1 = numpy.random.rand(5, 26)
+        self.theta2 = numpy.random.rand(9, 26)
+
+
         return
 
     @staticmethod
     def replace_zeroes(data):
         min_nonzero = numpy.zeros_like(data)
+        where_nan = numpy.isnan(data)
+        data[where_nan] = 0
         data = numpy.where(data > 0, data, min_nonzero)
         data[data == 0] = 0.0000000001
+        max_number = numpy.ones(data.shape)
+        data = numpy.where(data>1, data, max_number)
         return data
 
     @staticmethod
@@ -168,25 +198,34 @@ class LightNN:
         return (x - xmin) / (x.max(axis=0) - xmin)
 
     def cost_gradient(self, input_map, label, learning_rate, lamba):
-        vec = []
-        input_map = self.replace_zeroes(input_map)
-        flat = self.flatten_layer(label)
+        vec = [] * 400
         reg = (lamba / len(input_map)) * sum(self.weight ** 2)
-        loss = input_map - flat
-        cost = numpy.sum(loss ** 2) / (2 * len(input_map))
-        cost2 = numpy.sum(numpy.multiply(-flat, numpy.log(input_map))
-                          - numpy.multiply((1 - flat), numpy.log(1 - input_map)))
-        vec.append((cost, cost2))
-        #print (cost, cost2)
-        grad = (numpy.multiply(numpy.transpose(input_map), loss) / len(input_map))
+        loss = [] * 100
+        grad = []
 
-        print('COST ====> ', cost, cost2)
-        print(grad.shape, )
-        self.weight -= learning_rate * grad
+        print ('LEN', len(label), label.shape)
+        for isx, img in enumerate(input_map):
+            loss.append(img - label)
+            cost = numpy.sum(numpy.array(loss) ** 2) / 2 / len(input_map)
+            print('labe===l ', label.shape, input_map.shape, numpy.array(loss).shape, input_map)
+            cost2 = numpy.sum(numpy.multiply(-label[isx], numpy.log(img))
+                          - numpy.multiply((1 - label[isx]), numpy.log(1 - img)))
+            vec.append(cost * 1000)
+            print('COST====', cost, 'COST2====', cost2)
+            grad.append(numpy.sum(numpy.dot(input_map, numpy.array(loss))) / len(input_map) + reg)
+            print('grad shape', numpy.array(grad).shape)
+        self.weight -= learning_rate * numpy.reshape(numpy.array(grad), input_map.shape)
         return input_map, vec
 
+    def pute(self, i, label, lamba, learning):
+        import scipy.optimize as opt
+        result = opt.fmin_tnc(func=self.cost_gradient, x0=self.weight,
+                              fprime=self.cost_gradient,
+                              args=(i, label, lamba))
+        print('RESULT===>', result[0])
+
     def back_propagation(self, input_map, label, lamba, reverse):
-        print ("backpropagation", self.weight)
+        #print ("backpropagation", self.weight)
         input_map = numpy.reshape(input_map, label.shape)
         delta_scrip = label - input_map
         index = 2
@@ -199,12 +238,12 @@ class LightNN:
             c = numpy.reshape(delta_curr, self.weight[0].shape)
             t = numpy.dot(self.weight[index - 1], c)
             e = numpy.dot(t, v)
-            print('z score activation====', reverse[index - 1])
-            print('weight shape weight ==>', self.weight, self.weight[index - 1])
-            print('t', e.shape, self.weight[index - 1].shape, c.shape, v.shape)
+            #print('z score activation====', reverse[index - 1])
+            #print('weight shape weight ==>', self.weight, self.weight[index - 1])
+            #print('t', e.shape, self.weight[index - 1].shape, c.shape, v.shape)
             delta_erra.append(e)
-            print('reverse shape', len(reverse[index - 1]))
-            print('len delta===', delta_erra[i].shape)
+            #print('reverse shape', len(reverse[index - 1]))
+            #print('len delta===', delta_erra[i].shape)
             weight_grad[index - 1] = weight_grad[index - 1] + delta_erra[i] * reverse[index - 1]
             i += 1
             weight_grad[index - 1] /= len(input_map)
@@ -217,21 +256,32 @@ class LightNN:
     def flatten_layer(X):
         return numpy.reshape(X, (numpy.prod(X.shape[:])))
 
-    def forward_propagation(self, input_, activation_function, tmp, bias):
-        print('forward propagation weight shape and value ', self.weight.shape, self.weight)
-        weight_tmp = self.weight + bias                                                                              
-        a1 = numpy.dot(numpy.transpose(weight_tmp[0]), input_)
-        activated = activation_function(a1)
-        tmp.append(activated)
-        a1 = numpy.dot(numpy.transpose(weight_tmp[1]), activated)
-        return activation_function(a1)
+    def forward_propagation(self, input_, activation_function, tmp):
+        print('fwd')
+        m = input_.shape[0]
+
+        a1prime = numpy.dot(self.theta1.T, input_)
+
+
+        print('ok===',self.theta1.shape, self.theta2.shape, input_.shape, a1prime.shape)
+        activatedprime = activation_function(a1prime)
+        tmp.append(activatedprime)
+
+        print(self.theta2)
+       # test = numpy.insert(self.theta2, 0, 1, axis=1)
+
+      #  print(test.shape)
+        a1prime = numpy.dot(self.theta2, activatedprime)
+        t1 = activation_function(a1prime)
+        print(t1.shape)
+        return t1
 
 
 class LightCNN:
 
     def __init__(self, h, w, c):
         self.to_cache = {}
-        self.bank_filter = numpy.random.randn(5, 3, 3, 3).astype(numpy.float64)
+        self.bank_filter = numpy.random.randn(5, 3, 3).astype(numpy.float64)
         self.weight = []
         self.bias = []
         self.stride = 1
@@ -245,19 +295,19 @@ class LightCNN:
         if check:
             window = 2
 
-            n_h = int(1 + (input_map.shape[1] - window) / self.stride)
-            n_w = int(1 + (input_map.shape[2] - window) / self.stride)
+            n_h = int(1 + (input_map.shape[0] - window) / self.stride)
+            n_w = int(1 + (input_map.shape[1] - window) / self.stride)
             pooled_features = numpy.zeros((len(input_map[0]), n_h, n_w, 3))
             for i in range(len(input_map[0])):
                 for h in range(n_h):                # loop on the vertical axis of the output volume
                     for w in range(n_w):           # loop on the horizontal axis of the output volume
-                        for c in range (3):        # loop over the channels of the output volume
-                            vert_start = h * 1
-                            vert_end = vert_start + 2
-                            horiz_start = w * 1
-                            horiz_end = horiz_start + 2
-                            a_prev_slice = input_map[vert_start:vert_end, horiz_start:horiz_end, c]
-                            pooled_features[i, h, w, c] = numpy.max(a_prev_slice)
+                        #for c in range (3):        # loop over the channels of the output volume
+                        vert_start = h * 1
+                        vert_end = vert_start + 2
+                        horiz_start = w * 1
+                        horiz_end = horiz_start + 2
+                        a_prev_slice = input_map[vert_start:vert_end, horiz_start:horiz_end]
+                        pooled_features[i, h, w, 0] = numpy.max(a_prev_slice)
         return input_map
 
     def conv_layer(self, input_map, activation_function):
@@ -266,13 +316,10 @@ class LightCNN:
         return activation_function(conv)
 
     def dense_layer(self, input_map, label, activation_function, learning_rate, lamba):
-        flat = self.neural.flatten_layer(input_map)
-        forward_res = self.neural.forward_propagation(flat, activation_function, self.tmp,
-                                                      numpy.ones((1, self.neural.weight.shape[1])))
+        print('dense')
+        forward_res = self.neural.forward_propagation(input_map, activation_function, self.tmp)
         self.tmp.append(forward_res)
         output, cost_vec = self.neural.cost_gradient(forward_res, label, learning_rate, lamba)
-
-        self.neural.back_propagation(output, label, lamba, self.tmp)
         return output, cost_vec
 
     @staticmethod
@@ -288,12 +335,13 @@ class LightCNN:
 if __name__ == '__main__':
     Mamadou = Mamadou()
 
-    helper = Helper(["data/train/beauty-personal_care-hygiene", "data/train/clothing"
-                     "data/train/communications", "data/train/footwear", "data/train/household-furniture",
-                     "data/train/kitchen_merchandise", "data/train/personal_accessories", "data/train/sports_equipment",
-                     "data/train/toys-game"])
+    #helper = Helper(["data/train/beauty-personal_care-hygiene", "data/train/clothing"
+     #                "data/train/communications", "data/train/footwear", "data/train/household-furniture",
+     #                "data/train/kitchen_merchandise", "data/train/personal_accessories", "data/train/sports_equipment",
+     #                "data/train/toys-game"])
 
-    labels = helper.vector_input
-    print(len(helper.vector_input[1]), len(helper.vector_input[2]))
-    Mamadou.train(numpy.random.randn(10, 5, 5, 3).astype(numpy.float64), 400,
-                  Mamadou.forward_pass, numpy.random.randn(10, 5, 5, 3).astype(numpy.float64))
+    #labels = helper.vector_input
+    #print(len(helper.vector_input[1]), len(helper.vector_input[2]))
+    Mamadou.train(numpy.random.randn(100, 5, 5, 3).astype(numpy.float64), 500,
+                  Mamadou.forward_pass, numpy.random.randn(100, 5, 5).astype(numpy.float64))
+    #Mamadou.predict(numpy.random.randn(5, 5, 3))
