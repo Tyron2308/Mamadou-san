@@ -14,6 +14,7 @@ def forward_propagate(X, theta1, theta2):
     m = X.shape[0]
 
     a1 = np.insert(X, 0, values=np.ones(m), axis=1)
+
     z2 = a1 * theta1.T
     a2 = np.insert(sigmoid(z2), 0, values=np.ones(m), axis=1)
     z3 = a2 * theta2.T
@@ -21,14 +22,20 @@ def forward_propagate(X, theta1, theta2):
 
     return a1, z2, a2, z3, h
 
+
 def cost(params, input_size, hidden_size, num_labels, X, y, learning_rate):
     m = X.shape[0]
     X = np.matrix(X)
     y = np.matrix(y)
+    print('len-=====', len(m))
 
     # reshape the parameter array into parameter matrices for each layer
-    theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
-    theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+    theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)],
+                                  (hidden_size, (input_size + 1))))
+    theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):],
+                                  (num_labels, (hidden_size + 1))))
+
+    print('thetha====', theta1.shape, theta2.shape)
 
     # run the feed-forward pass
     a1, z2, a2, z3, h = forward_propagate(X, theta1, theta2)
@@ -44,8 +51,10 @@ def cost(params, input_size, hidden_size, num_labels, X, y, learning_rate):
 
     return J
 
+
 def sigmoid_gradient(z):
     return np.multiply(sigmoid(z), (1 - sigmoid(z)))
+
 
 def backprop(params, input_size, hidden_size, num_labels, X, y, learning_rate):
     m = X.shape[0]
@@ -53,8 +62,10 @@ def backprop(params, input_size, hidden_size, num_labels, X, y, learning_rate):
     y = np.matrix(y)
 
 # reshape the parameter array into parameter matrices for each layer
-    theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
-    theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+    theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)],
+                                  (hidden_size, (input_size + 1))))
+    theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):],
+                                  (num_labels, (hidden_size + 1))))
 
 # run the feed-forward pass
     a1, z2, a2, z3, h = forward_propagate(X, theta1, theta2)
@@ -79,11 +90,11 @@ def backprop(params, input_size, hidden_size, num_labels, X, y, learning_rate):
 
 # perform backpropagation
     for t in range(m):
-        a1t = a1[t,:]  # (1, 401)
-        z2t = z2[t,:]  # (1, 25)
-        a2t = a2[t,:]  # (1, 26)
-        ht = h[t,:]  # (1, 10)
-        yt = y[t,:]  # (1, 10)
+        a1t = a1[t, :]  # (1, 401)
+        z2t = z2[t, :]  # (1, 25)
+        a2t = a2[t, :]  # (1, 26)
+        ht = h[t, :]  # (1, 10)
+        yt = y[t, :]  # (1, 10)
 
         d3t = ht - yt  # (1, 10)
 
@@ -105,10 +116,12 @@ def backprop(params, input_size, hidden_size, num_labels, X, y, learning_rate):
 
     return J, grad
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
+    import time
+    start = time.time()
     from scipy.optimize import minimize
-    data = loadmat('data/ex3data1.mat')
+    data = loadmat('ex3/ex3data1.mat')
     X = data['X']
     y = data['y']
     input_size = 400
@@ -119,26 +132,63 @@ if __name__ == '__main__':
     m = X.shape[0]
     X = np.matrix(X)
     y = np.matrix(y)
-    params = (np.random.random(size=hidden_size * (input_size + 1) + num_labels * (hidden_size + 1)) - 0.5) * 0.25
+    params = (np.random.random(size=hidden_size * (input_size + 1) +
+                                    num_labels * (hidden_size + 1)) - 0.5) * 0.25
 
+
+    print(params.shape)
     # unravel the parameter array into parameter matrices for each layer
-    theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
-    theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+    theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)],
+                                  (hidden_size, (input_size + 1))))
+    theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):],
+                                  (num_labels, (hidden_size + 1))))
 
-
+    print('THETA', theta1.shape, theta2.shape, X.shape)
     encoder = OneHotEncoder(sparse=False)
     y_onehot = encoder.fit_transform(y)
-# minimize the objective function
-    fmin = minimize(fun=backprop, x0=params, args=(input_size, hidden_size, num_labels, X, y_onehot, learning_rate),
-                     method='TNC', jac=True, options={'maxiter': 250})
-    X = np.matrix(X)
-    theta1 = np.matrix(np.reshape(fmin.x[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
-    theta2 = np.matrix(np.reshape(fmin.x[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+    # minimize the objective function
+    #fmin = minimize(fun=backprop, x0=params, args=(input_size, hidden_size, num_labels, X, y_onehot, learning_rate), method='TNC', jac=True, options={'maxiter': 250})
 
-    a1, z2, a2, z3, h = forward_propagate(X, theta1, theta2)
-    y_pred = np.array(np.argmax(h, axis=1) + 1)
+    # print (fmin)
+    # X = np.matrix(X)
+    # theta1 = np.matrix(np.reshape(fmin.x[:hidden_size * (input_size + 1)], (hidden_size, (input_size + 1))))
+    # theta2 = np.matrix(np.reshape(fmin.x[hidden_size * (input_size + 1):], (num_labels, (hidden_size + 1))))
+    # print("THETA", theta1.shape, theta2.shape, X.shape)
+    #
+    # a1, z2, a2, z3, h = forward_propagate(X, theta1, theta2)
+    # y_pred = np.array(np.argmax(h, axis=1) + 1)
+    #
+    # correct = [1 if a == b else 0 for (a, b) in zip(y_pred, y)]
+    #
+    # a1, z2, a2, z3, h = forward_propagate(X[10], theta1, theta2)
+    # y_pred = np.array(np.argmax(h, axis=1) + 1)
+    # print('ipred====',y_pred, y[10])
+    #
+    #
+    # a1, z2, a2, z3, h = forward_propagate(X[3450], theta1, theta2)
+    # y_pred = np.array(np.argmax(h, axis=1) + 1)
+    # print('ipred====',y_pred, y[3450])
+    #
+    #
+    # a1, z2, a2, z3, h = forward_propagate(X[345], theta1, theta2)
+    #
+    # y_pred = np.array(np.argmax(h, axis=1) + 1)
+    # print('ipred====',y_pred, y[345])
+    #
+    # a1, z2, a2, z3, h = forward_propagate(X[100], theta1, theta2)
+    #
+    # y_pred = np.array(np.argmax(h, axis=1) + 1)
+    # print('ipred====',y_pred, y[100])
+    #
+    # a1, z2, a2, z3, h = forward_propagate(X[2890], theta1, theta2)
+    # y_pred = np.array(np.argmax(h, axis=1) + 1)
+    # print('ipred====',y_pred, y[2890])
 
-    correct = [1 if a == b else 0 for (a, b) in zip(y_pred, y)]
-    accuracy = (np.sum(map(int, correct)) / float(len(correct)))
-    print('accuracy = {0}%'.format(accuracy * 100))
+#  accuracy = (np.sum(map(int, correct)) / float(len(correct)))
+  #  print('accuracy = {0}%'.format(accuracy * 100))
 
+   # print(len(correct) / X.shape[0])
+
+   # end = time.time()
+
+    #print("TIME", end - start)

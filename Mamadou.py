@@ -8,8 +8,13 @@ import skimage.io as io
 import matplotlib.pyplot as plt
 
 class OnehotEncoder:
-    def toOnehot(self):
-        return
+    def __init__(self, num_label):
+        self.num_label = num_label
+
+    def toOnehot(self, label):
+        z = numpy.zeros(self.num_label)
+        z[label] = 1
+        return z
 
 class Opti:
     @staticmethod
@@ -72,7 +77,7 @@ class Helper:
                 name = stk[0][2]
                 print('The failing function was', name)
         else:
-            return vector_feature
+            return numpy.array(vector_feature)
 
     @staticmethod
     def reverse_dictionnary(dictionary):
@@ -335,13 +340,13 @@ class LightCNN:
 if __name__ == '__main__':
     Mamadou = Mamadou()
 
-    #helper = Helper(["data/train/beauty-personal_care-hygiene", "data/train/clothing"
-     #                "data/train/communications", "data/train/footwear", "data/train/household-furniture",
-     #                "data/train/kitchen_merchandise", "data/train/personal_accessories", "data/train/sports_equipment",
-     #                "data/train/toys-game"])
+    helper = Helper(["data/train/beauty-personal_care-hygiene", "data/train/clothing"
+                     "data/train/communications", "data/train/footwear", "data/train/household-furniture",
+                     "data/train/kitchen_merchandise", "data/train/personal_accessories", "data/train/sports_equipment",
+                     "data/train/toys-game"])
 
     #labels = helper.vector_input
-    #print(len(helper.vector_input[1]), len(helper.vector_input[2]))
-    Mamadou.train(numpy.random.randn(100, 5, 5, 3).astype(numpy.float64), 500,
-                  Mamadou.forward_pass, numpy.random.randn(100, 5, 5).astype(numpy.float64))
+    print('sum', helper.vector_input)
+    #Mamadou.train(numpy.random.randn(100, 5, 5, 3).astype(numpy.float64), 500,
+     #             Mamadou.forward_pass, numpy.random.randn(100, 5, 5).astype(numpy.float64))
     #Mamadou.predict(numpy.random.randn(5, 5, 3))
