@@ -6,9 +6,10 @@ from scipy import ndimage
 import matplotlib.pyplot as plt
 import time
 
+
 def run_img(arr, w, b, conv_param, img_size, to_benchmark):
     start = time.time()
-    
+
     dir = os.listdir(arr[0])
     x = np.zeros((len(dir), 3, img_size, img_size))
     for idx, img in enumerate(dir):
@@ -43,7 +44,7 @@ def conv_forward_naive2(x, w, b, conv_param):
     X = np.resize(x, (w.shape[1] * w.shape[2] * w.shape[3], (x.shape[1] * x.shape[2]
                                                              * x.shape[3] * x.shape[0])))
     print('first test ===', x.shape, W.shape, X.shape)
-    ret = np.dot(X[0].T ,W.T) + b
+    ret = np.dot(X.T, W.T) + b
     print('first test ===', W.shape, X.shape, ret.shape)
     s = ret.reshape(w.shape[0], x.shape[1], x.shape[2], x.shape[3])
 
@@ -110,7 +111,7 @@ def conv_layer(input_map, w, b, conv):
     s = ndimage.convolve(input_map, mat, mode='constant', cval=1.0)
 
     print('conv shappp === ', conv.shape)
-    cache = (x, w, b, conv)
+    cache = (input_map, w, b, conv)
     return s, cache
 
 
