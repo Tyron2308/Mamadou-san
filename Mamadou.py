@@ -7,14 +7,23 @@ import sys
 import skimage.io as io
 import matplotlib.pyplot as plt
 
+
 class OnehotEncoder:
+
     def __init__(self, num_label):
         self.num_label = num_label
 
-    def toOnehot(self, label):
-        z = numpy.zeros(self.num_label)
-        z[label] = 1
-        return z
+    def to_onehot(self, vector):
+        stock = [] * (len(vector) + 1)
+        stock_img = [] * (len(vector) + 1)
+        for label_path in vector:
+            for img in label_path:
+                z = numpy.zeros(self.num_label)
+                z[int(img[0])] = 1
+                stock.append(z)
+                stock_img.append(img[1])
+        return numpy.array(stock), numpy.array(stock_img)
+
 
 class Opti:
     @staticmethod
@@ -22,6 +31,7 @@ class Opti:
         z = numpy.zeros_like(input_map, dtype=numpy.float64)
         r = numpy.where(input_map > z, input_map, z)
         return r.reshape((z.shape[1], z.shape[0], z.shape[2]))
+
     @staticmethod
     def reelu_activation2(input_map):
         z = numpy.zeros_like(input_map, dtype=numpy.float64)
@@ -52,43 +62,48 @@ class Helper:
         return gray
 
     def transform_map(self, array_path, dictionary_categorical):
-        if array_path and array_path[0]:
+        if array_path.size > 0:
             for key in dictionary_categorical:
                 if not dictionary_categorical[key]:
                     dictionary_categorical[key] = array_path[0]
                     break
-            return self.transform_map(array_path[1:len(array_path)], dictionary_categorical)
+            return self.transform_map(array_path[1:len(array_path)],
+                                      dictionary_categorical)
         return dictionary_categorical
 
     def vectorize_features(self, path_arr, dictionary, count, vector_feature):
-        if count < len(path_arr) and path_arr[count]:
+        if path_arr.size > 0:
             try:
-                vector_input = list()
-                arr_txt = os.listdir(path_arr[count])
+                arr_txt = os.listdir(path_arr[0])
+                vector_input = [] * (len(arr_txt) + 1)
+                g = lambda x, data: x.get(data)
                 for img in arr_txt:
-                    img = numpy.array(io.imread(path_arr[count] + "/" + img), dtype=float)
-                    g = lambda x, data: x.get(data)
-                    vector_input.append((g(dict(dictionary), path_arr[count]), img))
+                    img = numpy.array(io.imread(path_arr[0] + "/" + img),
+                                      dtype=numpy.float64)
+                    vector_input.append((g(dictionary, path_arr[0]), img))
                 vector_feature.append(vector_input)
-                return self.vectorize_features(path_arr[1:len(path_arr)], dictionary, count + 1, vector_feature)
+                return self.vectorize_features(path_arr[1:], dictionary, count + 1,
+                                               vector_feature)
             except OSError:
                 tb = sys.exc_info()[-1]
                 stk = traceback.extract_tb(tb, 1)
                 name = stk[0][2]
-                print('The failing function was', name)
+                print('The failing function was', tb, name)
         else:
             return numpy.array(vector_feature)
 
     @staticmethod
     def reverse_dictionnary(dictionary):
-        for k,v in dictionary.items():
+        for k, v in dictionary.items():
             yield v, k
 
     def __init__(self, array_path):
         valv = dict.fromkeys((range(len(array_path))))
         dictionary = self.transform_map(array_path, valv)
         reverse = self.reverse_dictionnary(dictionary)
-        self.vector_input = self.vectorize_features(array_path, reverse, 0, list())
+        self.vector_input = self.vectorize_features(array_path, dict(reverse),
+                                                    0, [] * (len(array_path) + 1))
+        print(self.vector_input.shape)
 
 
 class Mamadou:
@@ -123,7 +138,7 @@ class Mamadou:
     def train(self, train_test, iter_max, pass_to_execute, label):
         idx = 0
         print('LABEL ', label.shape)
-        output = numpy.array(train_test, dtype=numpy.float64)
+        output = []
         c = []
         while idx < iter_max:
             for count, img in enumerate(train_test):
@@ -299,10 +314,11 @@ class LightCNN:
     def pool_layer(self, input_map, check):
         if check:
             window = 2
-
+            print('input===', input_map.shape)
             n_h = int(1 + (input_map.shape[0] - window) / self.stride)
             n_w = int(1 + (input_map.shape[1] - window) / self.stride)
-            pooled_features = numpy.zeros((len(input_map[0]), n_h, n_w, 3))
+            pooled_features = numpy.zeros_like((input_map.shape[0], n_h, n_w))
+            print('pooled_', pooled_features.shape, n_h, n_w)
             for i in range(len(input_map[0])):
                 for h in range(n_h):                # loop on the vertical axis of the output volume
                     for w in range(n_w):           # loop on the horizontal axis of the output volume
@@ -312,8 +328,8 @@ class LightCNN:
                         horiz_start = w * 1
                         horiz_end = horiz_start + 2
                         a_prev_slice = input_map[vert_start:vert_end, horiz_start:horiz_end]
-                        pooled_features[i, h, w, 0] = numpy.max(a_prev_slice)
-        return input_map
+                        pooled_features[i, h, w] = numpy.max(a_prev_slice)
+        return pooled_features
 
     def conv_layer(self, input_map, activation_function):
         matrix_filter = numpy.matmul(self.bank_filter[0], self.bank_filter[1])
@@ -338,15 +354,19 @@ class LightCNN:
 
 
 if __name__ == '__main__':
-    Mamadou = Mamadou()
+    mamadou = Mamadou()
 
-    helper = Helper(["data/train/beauty-personal_care-hygiene", "data/train/clothing"
-                     "data/train/communications", "data/train/footwear", "data/train/household-furniture",
-                     "data/train/kitchen_merchandise", "data/train/personal_accessories", "data/train/sports_equipment",
-                     "data/train/toys-game"])
+    arr = numpy.array(["data/train/beauty-personal_care-hygiene",
+                     "data/train/clothing",
+                     "data/train/communications",
+                     "data/train/footwear",
+                     "data/train/household-furniture",
+                     "data/train/kitchen_merchandise",
+                     "data/train/personal_accessories",
+                     "data/train/sports_equipment",
+                     "data/train/toys-games"])
+    helper = Helper(arr)
+    label, img = OnehotEncoder(len(arr)).to_onehot(helper.vector_input)
 
-    #labels = helper.vector_input
-    print('sum', helper.vector_input)
-    #Mamadou.train(numpy.random.randn(100, 5, 5, 3).astype(numpy.float64), 500,
-     #             Mamadou.forward_pass, numpy.random.randn(100, 5, 5).astype(numpy.float64))
-    #Mamadou.predict(numpy.random.randn(5, 5, 3))
+    print(len(label))
+    mamadou.train(img, 500, mamadou.forward_pass, label)
