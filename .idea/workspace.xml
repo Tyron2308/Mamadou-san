@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="07741c82-b04c-4330-a6be-af8db2d96f81" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/Mamadou.py" afterPath="$PROJECT_DIR$/Mamadou.py" />
       <change beforePath="$PROJECT_DIR$/fuck.py" afterPath="$PROJECT_DIR$/fuck.py" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -18,12 +17,11 @@
       <file leaf-file-name="Mamadou.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Mamadou.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="258">
-              <caret line="319" column="78" lean-forward="true" selection-start-line="319" selection-start-column="78" selection-end-line="319" selection-end-column="78" />
+            <state relative-caret-position="-950">
+              <caret line="61" column="19" lean-forward="true" selection-start-line="58" selection-start-column="2" selection-end-line="61" selection-end-column="19" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
                 <element signature="e#658#1219#0" expanded="false" />
-                <element signature="e#1418#1540#0" expanded="false" />
                 <element signature="e#1615#1996#0" expanded="false" />
                 <element signature="e#3060#3114#0" expanded="false" />
                 <element signature="e#6386#10597#0" expanded="false" />
@@ -35,8 +33,8 @@
       <file leaf-file-name="test.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1194">
-              <caret line="57" column="0" lean-forward="false" selection-start-line="57" selection-start-column="0" selection-end-line="57" selection-end-column="0" />
+            <state relative-caret-position="2448">
+              <caret line="144" column="0" lean-forward="true" selection-start-line="144" selection-start-column="0" selection-end-line="144" selection-end-column="0" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -47,8 +45,20 @@
       <file leaf-file-name="fuck.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fuck.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+            <state relative-caret-position="170">
+              <caret line="10" column="4" lean-forward="false" selection-start-line="10" selection-start-column="4" selection-end-line="10" selection-end-column="4" />
+              <folding>
+                <element signature="e#0#39#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="filters.py" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/.local/lib/python3.6/site-packages/scipy/ndimage/filters.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="266">
+              <caret line="827" column="0" lean-forward="false" selection-start-line="827" selection-start-column="0" selection-end-line="827" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -66,6 +76,7 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>print</find>
+      <find>3</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -87,10 +98,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-2" />
-    <option name="y" value="-18" />
-    <option name="width" value="1444" />
-    <option name="height" value="920" />
+    <option name="x" value="720" />
+    <option name="width" value="720" />
+    <option name="height" value="881" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -123,7 +133,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Mamadou">
+  <component name="RunManager" selected="Python.fuck">
     <configuration default="true" type="Applet" factoryName="Applet">
       <option name="HTML_USED" value="false" />
       <option name="WIDTH" value="400" />
@@ -266,8 +276,8 @@
     </list>
     <recent_temporary>
       <list size="3">
-        <item index="0" class="java.lang.String" itemvalue="Python.Mamadou" />
-        <item index="1" class="java.lang.String" itemvalue="Python.fuck" />
+        <item index="0" class="java.lang.String" itemvalue="Python.fuck" />
+        <item index="1" class="java.lang.String" itemvalue="Python.Mamadou" />
         <item index="2" class="java.lang.String" itemvalue="Python.test" />
       </list>
     </recent_temporary>
@@ -289,7 +299,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-2" y="-18" width="1444" height="920" extended-state="0" />
+    <frame x="720" y="0" width="720" height="881" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -299,7 +309,7 @@
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.4798611" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.83519554" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -337,7 +347,6 @@
           <folding>
             <element signature="e#0#12#0" expanded="true" />
             <element signature="e#658#1219#0" expanded="false" />
-            <element signature="e#1418#1540#0" expanded="false" />
             <element signature="e#1615#1996#0" expanded="false" />
             <element signature="e#3060#3114#0" expanded="false" />
             <element signature="e#6386#10597#0" expanded="false" />
@@ -362,7 +371,6 @@
           <folding>
             <element signature="e#0#12#0" expanded="true" />
             <element signature="e#658#1219#0" expanded="false" />
-            <element signature="e#1418#1540#0" expanded="false" />
             <element signature="e#1615#1996#0" expanded="false" />
             <element signature="e#3060#3114#0" expanded="false" />
             <element signature="e#6386#10597#0" expanded="false" />
@@ -387,7 +395,6 @@
           <folding>
             <element signature="e#0#12#0" expanded="true" />
             <element signature="e#658#1219#0" expanded="false" />
-            <element signature="e#1418#1540#0" expanded="false" />
             <element signature="e#1615#1996#0" expanded="false" />
             <element signature="e#3060#3114#0" expanded="false" />
             <element signature="e#6386#10597#0" expanded="false" />
@@ -407,7 +414,6 @@
           <folding>
             <element signature="e#0#12#0" expanded="true" />
             <element signature="e#658#1219#0" expanded="false" />
-            <element signature="e#1418#1540#0" expanded="false" />
             <element signature="e#1615#1996#0" expanded="false" />
             <element signature="e#3060#3114#0" expanded="false" />
             <element signature="e#6386#10597#0" expanded="false" />
@@ -433,7 +439,6 @@
           <folding>
             <element signature="e#0#12#0" expanded="true" />
             <element signature="e#658#1219#0" expanded="false" />
-            <element signature="e#1418#1540#0" expanded="false" />
             <element signature="e#1615#1996#0" expanded="false" />
             <element signature="e#3060#3114#0" expanded="false" />
             <element signature="e#6386#10597#0" expanded="false" />
@@ -448,7 +453,6 @@
           <folding>
             <element signature="e#0#12#0" expanded="true" />
             <element signature="e#658#1219#0" expanded="false" />
-            <element signature="e#1418#1540#0" expanded="false" />
             <element signature="e#1615#1996#0" expanded="false" />
             <element signature="e#3060#3114#0" expanded="false" />
             <element signature="e#6386#10597#0" expanded="false" />
@@ -459,24 +463,21 @@
     <entry file="file://$USER_HOME$/.local/lib/python3.6/site-packages/scipy/optimize/tnc.py" />
     <entry file="file://$USER_HOME$/.local/lib/python3.6/site-packages/scipy/optimize/tnc.py" />
     <entry file="file://$USER_HOME$/.local/lib/python3.6/site-packages/scipy/optimize/test.py" />
-    <entry file="file://$PROJECT_DIR$/test.py">
+    <entry file="file://$USER_HOME$/.local/lib/python3.6/site-packages/scipy/ndimage/filters.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1194">
-          <caret line="57" column="0" lean-forward="false" selection-start-line="57" selection-start-column="0" selection-end-line="57" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="266">
+          <caret line="827" column="0" lean-forward="false" selection-start-line="827" selection-start-column="0" selection-end-line="827" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Mamadou.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="258">
-          <caret line="319" column="78" lean-forward="true" selection-start-line="319" selection-start-column="78" selection-end-line="319" selection-end-column="78" />
+        <state relative-caret-position="-950">
+          <caret line="61" column="19" lean-forward="true" selection-start-line="58" selection-start-column="2" selection-end-line="61" selection-end-column="19" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
             <element signature="e#658#1219#0" expanded="false" />
-            <element signature="e#1418#1540#0" expanded="false" />
             <element signature="e#1615#1996#0" expanded="false" />
             <element signature="e#3060#3114#0" expanded="false" />
             <element signature="e#6386#10597#0" expanded="false" />
@@ -484,11 +485,23 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2448">
+          <caret line="144" column="0" lean-forward="true" selection-start-line="144" selection-start-column="0" selection-end-line="144" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/fuck.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-          <folding />
+        <state relative-caret-position="170">
+          <caret line="10" column="4" lean-forward="false" selection-start-line="10" selection-start-column="4" selection-end-line="10" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
