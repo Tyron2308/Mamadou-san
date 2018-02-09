@@ -6,6 +6,78 @@ from scipy import ndimage
 import matplotlib.pyplot as plt
 import time
 
+def rel_error(x, y):
+    """ returns relative error """
+    return np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
+
+def eval_numerical_gradient_array(f, x, df, h=1e-5):
+    """
+    Evaluate a numeric gradient for a function that accepts a numpy
+    array and returns a numpy array.
+    """
+    grad = np.zeros_like(x)
+    it = np.nditer(x, flags=['multi_index'], op_flags=['readwrite'])
+    while not it.finished:
+        ix = it.multi_index
+
+        oldval = x[ix]
+        x[ix] = oldval + h
+        pos = f(x).copy()
+        x[ix] = oldval - h
+        neg = f(x).copy()
+        x[ix] = oldval
+
+        grad[ix] = np.sum((pos - neg) * df) / (2 * h)
+        it.iternext()
+    return grad
+
+def conv_backward_naive(dout, cache):
+    """
+    A naive implementation of the backward pass for a convolutional layer.
+    Inputs:
+    - dout: Upstream derivatives of shape (N, F, H', W')
+    - cache: A tuple of (x, w, b, conv_param) as in conv_forward_naive
+    Returns a tuple of:
+    - dx: Gradient with respect to x
+    - dw: Gradient with respect to w
+    - db: Gradient with respect to b
+    """
+    dx, dw, db = None, None, None
+    ###########################################################################
+    # TODO: Implement the convolutional backward pass.                        #
+    ###########################################################################
+
+    # Extract shapes and constants
+    x, w, b, conv_param = cache
+    N, C, H, W = x.shape
+    F, _, HH, WW = w.shape
+    stride = conv_param.get('stride', 1)
+    pad = conv_param.get('pad', 0)
+    # Padding
+    x_pad = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)), 'constant', constant_values=0)
+    H_prime = 1 + (H + 2 * pad - HH) // stride
+    W_prime = 1 + (W + 2 * pad - WW) // stride
+    # Construct output
+    dx_pad = np.zeros_like(x_pad)
+    dx = np.zeros_like(x)
+    dw = np.zeros_like(w)
+    db = np.zeros_like(b)
+    # Naive Loops
+    for n in range(N):
+        for f in range(F):
+            db[f] += dout[n, f].sum()
+            for j in range(0, H_prime):
+                for i in range(0, W_prime):
+                    dw[f] += x_pad[n, :, j * stride:j * stride + HH, i * stride:i * stride + WW] * dout[n, f, j, i]
+                    dx_pad[n, :, j * stride:j * stride + HH, i * stride:i * stride + WW] += w[f] * dout[n, f, j, i]
+    # Extract dx from dx_pad
+    dx = dx_pad[:, :, pad:pad+H, pad:pad+W]
+
+    ###########################################################################
+    #                             END OF YOUR CODE                            #
+    ###########################################################################
+    return dx, dw, db
+
 def conv_backward(dout, cache):
     X, W, b, stride, padding, X_col = cache
     n_filter, d_filter, h_filter, w_filter = W.shape
@@ -37,6 +109,7 @@ def col2im_indices(cols, x_shape, field_height=3, field_width=3, padding=1,
     if padding == 0:
         return x_padded
     return x_padded[:, :, padding:-padding, padding:-padding]
+
 def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
     # First figure out what the size of the output should be
     N, C, H, W = x_shape
@@ -278,6 +351,24 @@ if __name__=="__main__":
     #
     # imshow_noax(lool2[0, 5])
 
+    x = np.random.randn(4, 3, 5, 5)
+    w = np.random.randn(2, 3, 3, 3)
+    b = np.random.randn(2,)
+    dout = np.random.randn(4, 2, 5, 5)
+    conv_param = {'stride': 1, 'pad': 1}
+
+    dx_num = eval_numerical_gradient_array(lambda x: conv_forward_naive(x, w, b, conv_param)[0], x, dout)
+    dw_num = eval_numerical_gradient_array(lambda w: conv_forward_naive(x, w, b, conv_param)[0], w, dout)
+    db_num = eval_numerical_gradient_array(lambda b: conv_forward_naive(x, w, b, conv_param)[0], b, dout)
+
+    out, cache = conv_forward_naive(x, w, b, conv_param)
+    dx, dw, db = conv_backward_naive(dout, cache)
+
+# Your errors should be around 1e-9'
+    print 'Testing conv_backward_naive function'
+    print 'dx error: ', rel_error(dx, dx_num)
+    print 'dw error: ', rel_error(dw, dw_num)
+    print 'db error: ', rel_error(db, db_num)
     imshow_noax(lool2[1, 1])
     plt.subplot(2, 3, 2)
 
