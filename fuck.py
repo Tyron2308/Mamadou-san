@@ -6,6 +6,22 @@ from scipy import ndimage
 import matplotlib.pyplot as plt
 import time
 
+def conv_backward(dout, cache):
+    X, W, b, stride, padding, X_col = cache
+    n_filter, d_filter, h_filter, w_filter = W.shape
+
+    db = np.sum(dout, axis=(0, 2, 3))
+    db = db.reshape(n_filter, -1)
+
+    dout_reshaped = dout.transpose(1, 2, 3, 0).reshape(n_filter, -1)
+    dW = dout_reshaped @ X_col.T
+    dW = dW.reshape(W.shape)
+
+    W_reshape = W.reshape(n_filter, -1)
+    dX_col = W_reshape.T @ dout_reshaped
+    dX = col2im_indices(dX_col, X.shape, h_filter, w_filter, padding=padding, stride=stride)
+
+    return dX, dW, db
 
 def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
     # First figure out what the size of the output should be
