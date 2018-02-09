@@ -7,6 +7,56 @@ import matplotlib.pyplot as plt
 import time
 
 
+def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
+    # First figure out what the size of the output should be
+    N, C, H, W = x_shape
+    assert (H + 2 * padding - field_height) % stride == 0
+    assert (W + 2 * padding - field_height) % stride == 0
+    out_height = (H + 2 * padding - field_height) // stride + 1
+    out_width = (W + 2 * padding - field_width) // stride + 1
+
+    i0 = np.repeat(np.arange(field_height), field_width)
+    print ('io===', i0.shape)
+
+    i0 = np.tile(i0, C)
+    print ('io===', i0.shape)
+
+    i1 = stride * np.repeat(np.arange(out_height), out_width)
+
+    print ('io===', i1.shape)
+
+    j0 = np.tile(np.arange(field_width), field_height * C)
+
+    print ('io===', j0.shape)
+
+    j1 = stride * np.tile(np.arange(out_width), out_height)
+    i = i0.reshape(-1, 1) + i1.reshape(1, -1)
+    j = j0.reshape(-1, 1) + j1.reshape(1, -1)
+
+    k = np.repeat(np.arange(C), field_height * field_width).reshape(-1, 1)
+    print ('io===', j.shape)
+    print ('io===', i.shape, k.shape)
+
+    return (k, i, j)
+
+
+def im2col_indices(x, field_height, field_width, padding=1, stride=1):
+    """ An implementation of im2col based on some fancy indexing """
+    # Zero-pad the input
+    p = padding
+    x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
+
+
+    k, i, j = get_im2col_indices(x.shape, field_height, field_width, padding,
+                                 stride)
+    cols = x_padded[:, k, i, j]
+
+    print('cols===', cols.shape)
+    C = x.shape[1]
+    cols = cols.transpose(1, 2, 0)
+    print('ok===', cols.shape) #.reshape(field_height * field_width * C, -1)
+    return cols.reshape(field_height * field_width * C, -1)
+
 def run_img(arr, w, b, conv_param, img_size, to_benchmark):
     start = time.time()
 
@@ -20,8 +70,9 @@ def run_img(arr, w, b, conv_param, img_size, to_benchmark):
     out, cache = to_benchmark(x, w, b, conv_param)
 
     end = time.time()
-    print((end - start) * 60)
+    print((end - start) // 60)
     return x, out, cache
+
 
 def conv_forward_naive2(x, w, b, conv_param):
     print("VECTORIZE")
@@ -39,15 +90,19 @@ def conv_forward_naive2(x, w, b, conv_param):
     x_pad = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)),
                    'constant', constant_values=0)
     # Construct output
+    t = im2col_indices(x, w.shape[2], w.shape[3], conv_param['stride'], conv_param['pad'])
 
+    print('???', t.shape)
     W = w.reshape((w.shape[0], (w.shape[1] * w.shape[2] * w.shape[3])))
-    X = np.resize(x, (w.shape[1] * w.shape[2] * w.shape[3], (x.shape[1] * x.shape[2]
-                                                             * x.shape[3] * x.shape[0])))
-    print('first test ===', x.shape, W.shape, X.shape)
-    ret = np.dot(X.T, W.T) + b
-    print('first test ===', W.shape, X.shape, ret.shape)
-    s = ret.reshape(w.shape[0], x.shape[1], x.shape[2], x.shape[3])
+    X = np.resize(x, (27, 8320000))
 
+    print(X.shape)
+
+    ret = np.matmul(X.T, W.T) + b
+    print('first test ===', W.shape, t.shape, ret.shape)
+    s = ret.T.reshape(w.shape[0], x.shape[0], x.shape[2], x.shape[3])
+    #s = ret.T.reshape(w.shape[0], x.shape[2], x.shape[3], x.shape[0])
+   # s = s.transpose(3, 0, 1, 2)
     print('first test ===', s.shape)
     cache = (x, w, b, conv_param)
     return s, cache
@@ -161,23 +216,74 @@ if __name__=="__main__":
     b = np.array([0, 128])
 
     #x, lool, c = run_img(arr, w, b, {'stride': 1, 'pad': 1}, 400, conv_forward_naive)
+   # x2, lool18, c = run_img(arr, w, b, {'stride': 1, 'pad': 1}, 400, conv_forward_naive)
     x2, lool2, c = run_img(arr, w, b, {'stride': 1, 'pad': 1}, 400, conv_forward_naive2)
 
     #print('ok', x.shape, lool.shape)
     plt.subplot(2, 3, 1)
-    #imshow_noax(x[0], normalize=False)
+    #imshow_noax(lool2[1, 0], normalize=False)
 
+    #
+    # imshow_noax(lool2[0, 1])
+    # plt.subplot(2, 3, 2)
+    #
+    # imshow_noax(lool2[0, 2])
+    #
+    # plt.subplot(2, 3, 3)
+    # imshow_noax(lool2[0, 3])
+    #
+    # plt.subplot(2, 3, 4)
+    #
+    # imshow_noax(lool2[0, 4])
+    #
+    # plt.subplot(2, 3, 5)
+    #
+    # imshow_noax(lool2[0, 7])
+    #
+    # plt.subplot(2, 3, 6)
+    #
+    # imshow_noax(lool2[0, 6])
+    #
+    # plt.subplot(2, 4, 6)
+    #
+    # imshow_noax(lool2[0, 5])
+
+    imshow_noax(lool2[1, 1])
     plt.subplot(2, 3, 2)
-    imshow_noax(lool2[0, 0])
-    plt.title('Grayscale')
+
+    imshow_noax(lool2[1, 2])
+
+    plt.subplot(2, 3, 3)
+    imshow_noax(lool2[1, 3])
+
+    plt.subplot(2, 3, 4)
+
+    imshow_noax(lool2[1, 4])
+
+    plt.subplot(2, 3, 5)
+
+    imshow_noax(lool2[1, 7])
+
+    plt.subplot(2, 3, 6)
+
+    imshow_noax(lool2[1, 6])
+
+    plt.subplot(2, 4, 6)
+
+    imshow_noax(lool2[1, 5])
+
+
+#for idx, l in enumerate(lool2):
+       # plt.subplot(2, 3, 2)
+      #  plt.title('Grayscale')
     #
     # plt.subplot(2, 3, 3)
     # imshow_noax(out[0, 0])
     # plt.title('Grayscale 2 ')
 
-    plt.subplot(2, 3, 4)
-    imshow_noax(lool2[0, 1])
-    plt.title('Edge')
+  #  plt.subplot(2, 3, 4)
+ #   imshow_noax(lool18[0, 1])
+#    plt.title('Edge')
 
     # plt.subplot(2, 3, 5)
     # imshow_noax(out[0, 1])
