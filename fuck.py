@@ -312,8 +312,20 @@ if __name__ == "__main__":
     # to each output so that nothing is negative.
     b = np.array([0, 128])
 
+    from skimage import io, color
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from skimage import exposure
+    import pylab
 
-    
+    img = io.imread('image.png')    # Load the image
+    img = color.rgb2gray(img)       # Convert the image to grayscale (1 channel)
+    # Adjust the contrast of the image by applying Histogram Equalization
+    image_equalized = exposure.equalize_adapthist(img/np.max(np.abs(img)), clip_limit=0.03)
+    plt.imshow(image_equalized, cmap=plt.cm.gray)
+    plt.axis('off')
+    plt.show()
+
     x2, lool2, c = run_img(arr, w, b, {'stride': 1, 'pad': 1},
                            400, conv_forward_naive2)
 
