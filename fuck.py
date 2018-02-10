@@ -6,9 +6,11 @@ from scipy import ndimage
 import matplotlib.pyplot as plt
 import time
 
+
 def rel_error(x, y):
     """ returns relative error """
     return np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
+
 
 def eval_numerical_gradient_array(f, x, df, h=1e-5):
     """
@@ -30,6 +32,7 @@ def eval_numerical_gradient_array(f, x, df, h=1e-5):
         grad[ix] = np.sum((pos - neg) * df) / (2 * h)
         it.iternext()
     return grad
+
 
 def conv_backward_naive(dout, cache):
     """
@@ -78,6 +81,7 @@ def conv_backward_naive(dout, cache):
     ###########################################################################
     return dx, dw, db
 
+
 def conv_backward(dout, cache):
     X, W, b, stride, padding, X_col = cache
     n_filter, d_filter, h_filter, w_filter = W.shape
@@ -95,6 +99,7 @@ def conv_backward(dout, cache):
 
     return dX, dW, db
 
+
 def col2im_indices(cols, x_shape, field_height=3, field_width=3, padding=1,
                    stride=1):
     """ An implementation of col2im based on fancy indexing and np.add.at """
@@ -109,6 +114,7 @@ def col2im_indices(cols, x_shape, field_height=3, field_width=3, padding=1,
     if padding == 0:
         return x_padded
     return x_padded[:, :, padding:-padding, padding:-padding]
+
 
 def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
     # First figure out what the size of the output should be
@@ -137,10 +143,10 @@ def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
     j = j0.reshape(-1, 1) + j1.reshape(1, -1)
 
     k = np.repeat(np.arange(C), field_height * field_width).reshape(-1, 1)
-    print ('io===', j.shape)
-    print ('io===', i.shape, k.shape)
+    print('io===', j.shape)
+    print('io===', i.shape, k.shape)
 
-    return (k, i, j)
+    return k, i, j
 
 
 def im2col_indices(x, field_height, field_width, padding=1, stride=1):
@@ -148,7 +154,6 @@ def im2col_indices(x, field_height, field_width, padding=1, stride=1):
     # Zero-pad the input
     p = padding
     x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
-
 
     k, i, j = get_im2col_indices(x.shape, field_height, field_width, padding,
                                  stride)
@@ -159,6 +164,7 @@ def im2col_indices(x, field_height, field_width, padding=1, stride=1):
     cols = cols.transpose(1, 2, 0)
     print('ok===', cols.shape) #.reshape(field_height * field_width * C, -1)
     return cols.reshape(field_height * field_width * C, -1)
+
 
 def run_img(arr, w, b, conv_param, img_size, to_benchmark):
     start = time.time()
@@ -189,26 +195,37 @@ def conv_forward_naive2(x, w, b, conv_param):
     assert (H + 2 * pad - HH) % stride == 0, 'Sanity Check Status: Conv Layer Failed in Height'
     assert (W + 2 * pad - WW) % stride == 0, 'Sanity Check Status: Conv Layer Failed in Width'
 
+    H_prime = 1 + (H + 2 * pad - HH) // stride
+    W_prime = 1 + (W + 2 * pad - WW) // stride
     # Padding
     x_pad = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)),
                    'constant', constant_values=0)
     # Construct output
-    t = im2col_indices(x, w.shape[2], w.shape[3], conv_param['stride'], conv_param['pad'])
+    X_col = im2col_indices(x, w.shape[2], w.shape[3],
+                           conv_param['stride'], conv_param['pad'])
 
-    print('???', t.shape)
-    W = w.reshape((w.shape[0], (w.shape[1] * w.shape[2] * w.shape[3])))
-    X = np.resize(x, (27, 8320000))
 
-    print(X.shape)
+    print('xcol==', X_col.shape)
+    W_col = w.reshape(F, -1)
 
-    ret = np.matmul(X.T, W.T) + b
-    print('first test ===', W.shape, t.shape, ret.shape)
-    s = ret.T.reshape(w.shape[0], x.shape[0], x.shape[2], x.shape[3])
-    #s = ret.T.reshape(w.shape[0], x.shape[2], x.shape[3], x.shape[0])
-   # s = s.transpose(3, 0, 1, 2)
-    print('first test ===', s.shape)
+    print('wcol', W_col.shape)
+    out = X_col.T @ W_col.T
+    out = out.reshape(2, H_prime, W_prime, N)
+    out = out.transpose(3, 0, 1, 2)
+#    print('???', t.shape)
+#     W = w.reshape((w.shape[0], (w.shape[1] * w.shape[2] * w.shape[3])))
+#     X = np.resize(x, (27, 8320000))
+#
+#     print(X.shape)
+#
+#     ret = np.matmul(X.T, W.T) + b
+#     print('first test ===', W.shape, ret.shape, ret.shape)
+#     s = ret.T.reshape(w.shape[0], x.shape[0], x.shape[2], x.shape[3])
+#     #s = ret.T.reshape(w.shape[0], x.shape[2], x.shape[3], x.shape[0])
+#    # s = s.transpose(3, 0, 1, 2)
+#     print('first test ===', s.shape)
     cache = (x, w, b, conv_param)
-    return s, cache
+    return out, cache
 
 
 def conv_forward_naive(x, w, b, conv_param):
@@ -238,18 +255,13 @@ def conv_forward_naive(x, w, b, conv_param):
     print('shapeeee=====', x.shape, w.shape)
     stride = conv_param.get('stride', 1)
     pad = conv_param.get('pad', 0)
-    # Check for parameter sanity
     assert (H + 2 * pad - HH) % stride == 0, 'Sanity Check Status: Conv Layer Failed in Height'
     assert (W + 2 * pad - WW) % stride == 0, 'Sanity Check Status: Conv Layer Failed in Width'
     H_prime = 1 + (H + 2 * pad - HH) // stride
     W_prime = 1 + (W + 2 * pad - WW) // stride
-    # Padding
     x_pad = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)), 'constant', constant_values=0)
-    # Construct output
     out = np.zeros((N, F, H_prime, W_prime))
 
-
-    # Naive Loops
     for n in range(N):
         for f in range(F):
             for j in range(0, H_prime):
@@ -261,22 +273,6 @@ def conv_forward_naive(x, w, b, conv_param):
     return out, cache
 
 
-def conv_layer(input_map, w, b, conv):
-    bank_filter = np.random.randn(2, 3, 3, 3).astype(np.float64)
-    matrix_filter = np.matmul(bank_filter[0], bank_filter[1]) + b
-    print('shape====>', matrix_filter.shape)
-    mat = [matrix_filter]
-    s = ndimage.convolve(input_map, mat, mode='constant', cval=1.0)
-
-    print('conv shappp === ', conv.shape)
-    cache = (input_map, w, b, conv)
-    return s, cache
-
-
-# kitten is wide, and puppy is already square
-#d = first.shape[1] -.shape[0]
-#kitten_cropped = kitten[:, d/2:-d/2, :]
-
 def imshow_noax(img, normalize=True):
     """ Tiny helper to show images as uint8 and remove axis labels """
     print('img===', img.shape)
@@ -287,10 +283,8 @@ def imshow_noax(img, normalize=True):
     plt.imshow(img.astype('uint8'))
     plt.gca().axis('off')
 
-# Show the original images and the results of the conv operation
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
     print('new test')
     arr = np.array(["data/train/beauty-personal_care-hygiene",
                     "data/train/clothing",
@@ -318,96 +312,32 @@ if __name__=="__main__":
     # to each output so that nothing is negative.
     b = np.array([0, 128])
 
-    #x, lool, c = run_img(arr, w, b, {'stride': 1, 'pad': 1}, 400, conv_forward_naive)
-   # x2, lool18, c = run_img(arr, w, b, {'stride': 1, 'pad': 1}, 400, conv_forward_naive)
-    x2, lool2, c = run_img(arr, w, b, {'stride': 1, 'pad': 1}, 400, conv_forward_naive2)
 
-    #print('ok', x.shape, lool.shape)
+    
+    x2, lool2, c = run_img(arr, w, b, {'stride': 1, 'pad': 1},
+                           400, conv_forward_naive2)
+
+    print('ok', x2.shape, lool2.shape)
     plt.subplot(2, 3, 1)
-    #imshow_noax(lool2[1, 0], normalize=False)
 
-    #
-    # imshow_noax(lool2[0, 1])
-    # plt.subplot(2, 3, 2)
-    #
-    # imshow_noax(lool2[0, 2])
-    #
-    # plt.subplot(2, 3, 3)
-    # imshow_noax(lool2[0, 3])
-    #
-    # plt.subplot(2, 3, 4)
-    #
-    # imshow_noax(lool2[0, 4])
-    #
-    # plt.subplot(2, 3, 5)
-    #
-    # imshow_noax(lool2[0, 7])
-    #
-    # plt.subplot(2, 3, 6)
-    #
-    # imshow_noax(lool2[0, 6])
-    #
-    # plt.subplot(2, 4, 6)
-    #
-    # imshow_noax(lool2[0, 5])
-
-    x = np.random.randn(4, 3, 5, 5)
-    w = np.random.randn(2, 3, 3, 3)
     b = np.random.randn(2,)
     dout = np.random.randn(4, 2, 5, 5)
     conv_param = {'stride': 1, 'pad': 1}
 
-    dx_num = eval_numerical_gradient_array(lambda x: conv_forward_naive(x, w, b, conv_param)[0], x, dout)
-    dw_num = eval_numerical_gradient_array(lambda w: conv_forward_naive(x, w, b, conv_param)[0], w, dout)
-    db_num = eval_numerical_gradient_array(lambda b: conv_forward_naive(x, w, b, conv_param)[0], b, dout)
+    #dx_num = eval_numerical_gradient_array(lambda x: conv_forward_naive(x2, w, b, conv_param)[0], x, dout)
+    #dw_num = eval_numerical_gradient_array(lambda w: conv_forward_naive(x2, w, b, conv_param)[0], w, dout)
+    #db_num = eval_numerical_gradient_array(lambda b: conv_forward_naive(x2, w, b, conv_param)[0], b, dout)
 
-    out, cache = conv_forward_naive(x, w, b, conv_param)
-    dx, dw, db = conv_backward_naive(dout, cache)
+   # out, cache = conv_forward_naive(x2, w, b, conv_param)
+   # dx, dw, db = conv_backward_naive(dout, cache)
 
 # Your errors should be around 1e-9'
-    print 'Testing conv_backward_naive function'
-    print 'dx error: ', rel_error(dx, dx_num)
-    print 'dw error: ', rel_error(dw, dw_num)
-    print 'db error: ', rel_error(db, db_num)
-    imshow_noax(lool2[1, 1])
+    #print ('Testing conv_backward_naive function', dx.shape, dw.shape, db.shape)
+   # print ('dx error: ', rel_error(dx, dx_num))
+   # print ('dw error: ', rel_error(dw, dw_num))
+   # print ('db error: ', rel_error(db, db_num))
     plt.subplot(2, 3, 2)
-
-    imshow_noax(lool2[1, 2])
-
+    imshow_noax(lool2[0, 1])
     plt.subplot(2, 3, 3)
-    imshow_noax(lool2[1, 3])
-
-    plt.subplot(2, 3, 4)
-
-    imshow_noax(lool2[1, 4])
-
-    plt.subplot(2, 3, 5)
-
-    imshow_noax(lool2[1, 7])
-
-    plt.subplot(2, 3, 6)
-
-    imshow_noax(lool2[1, 6])
-
-    plt.subplot(2, 4, 6)
-
-    imshow_noax(lool2[1, 5])
-
-
-#for idx, l in enumerate(lool2):
-       # plt.subplot(2, 3, 2)
-      #  plt.title('Grayscale')
-    #
-    # plt.subplot(2, 3, 3)
-    # imshow_noax(out[0, 0])
-    # plt.title('Grayscale 2 ')
-
-  #  plt.subplot(2, 3, 4)
- #   imshow_noax(lool18[0, 1])
-#    plt.title('Edge')
-
-    # plt.subplot(2, 3, 5)
-    # imshow_noax(out[0, 1])
-    # plt.title('Edge2')
-
+    imshow_noax(lool2[0, 0])
     plt.show()
