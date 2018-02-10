@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="07741c82-b04c-4330-a6be-af8db2d96f81" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fuck.py" afterPath="$PROJECT_DIR$/fuck.py" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -45,8 +46,8 @@
       <file leaf-file-name="fuck.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fuck.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="536">
-              <caret line="321" column="4" lean-forward="false" selection-start-line="321" selection-start-column="4" selection-end-line="321" selection-end-column="4" />
+            <state relative-caret-position="612">
+              <caret line="223" column="4" lean-forward="false" selection-start-line="223" selection-start-column="4" selection-end-line="223" selection-end-column="4" />
               <folding>
                 <element signature="e#0#39#0" expanded="true" />
                 <element signature="e#357#871#0" expanded="false" />
@@ -56,7 +57,6 @@
                 <element signature="e#4218#5183#0" expanded="false" />
                 <element signature="e#5261#5819#0" expanded="false" />
                 <element signature="e#5886#6308#0" expanded="false" />
-                <element signature="e#6361#7887#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -444,7 +444,6 @@
             <element signature="e#4218#5183#0" expanded="false" />
             <element signature="e#5261#5819#0" expanded="false" />
             <element signature="e#5886#6308#0" expanded="false" />
-            <element signature="e#6361#7887#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -486,7 +485,6 @@
             <element signature="e#4218#5183#0" expanded="false" />
             <element signature="e#5261#5819#0" expanded="false" />
             <element signature="e#5886#6308#0" expanded="false" />
-            <element signature="e#6361#7887#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -529,7 +527,6 @@
             <element signature="e#4218#5183#0" expanded="false" />
             <element signature="e#5261#5819#0" expanded="false" />
             <element signature="e#5886#6308#0" expanded="false" />
-            <element signature="e#6361#7887#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -692,8 +689,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/fuck.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="536">
-          <caret line="321" column="4" lean-forward="false" selection-start-line="321" selection-start-column="4" selection-end-line="321" selection-end-column="4" />
+        <state relative-caret-position="612">
+          <caret line="223" column="4" lean-forward="false" selection-start-line="223" selection-start-column="4" selection-end-line="223" selection-end-column="4" />
           <folding>
             <element signature="e#0#39#0" expanded="true" />
             <element signature="e#357#871#0" expanded="false" />
@@ -703,7 +700,6 @@
             <element signature="e#4218#5183#0" expanded="false" />
             <element signature="e#5261#5819#0" expanded="false" />
             <element signature="e#5886#6308#0" expanded="false" />
-            <element signature="e#6361#7887#0" expanded="false" />
           </folding>
         </state>
       </provider>

@@ -212,18 +212,15 @@ def conv_forward_naive2(x, w, b, conv_param):
     out = X_col.T @ W_col.T
     out = out.reshape(2, H_prime, W_prime, N)
     out = out.transpose(3, 0, 1, 2)
-#    print('???', t.shape)
-#     W = w.reshape((w.shape[0], (w.shape[1] * w.shape[2] * w.shape[3])))
-#     X = np.resize(x, (27, 8320000))
-#
-#     print(X.shape)
-#
-#     ret = np.matmul(X.T, W.T) + b
-#     print('first test ===', W.shape, ret.shape, ret.shape)
-#     s = ret.T.reshape(w.shape[0], x.shape[0], x.shape[2], x.shape[3])
-#     #s = ret.T.reshape(w.shape[0], x.shape[2], x.shape[3], x.shape[0])
-#    # s = s.transpose(3, 0, 1, 2)
-#     print('first test ===', s.shape)
+    kernel = np.flipud(np.fliplr(kernel))    # Flip the kernel
+    output = np.zeros_like(image)            # convolution output
+    # Add zero padding to the input image
+    image_padded = np.zeros((image.shape[0] + 2, image.shape[1] + 2))
+    image_padded[1:-1, 1:-1] = image
+    for x in range(image.shape[1]):     # Loop over every pixel of the image
+       for y in range(image.shape[0]):
+           # element-wise multiplication of the kernel and the image
+          output[y,x]=(kernel*image_padded[y:y+3,x:x+3]).sum()
     cache = (x, w, b, conv_param)
     return out, cache
 
