@@ -118,7 +118,7 @@ def col2im_indices(cols, x_shape, field_height=3, field_width=3, padding=1,
 
 def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
     # First figure out what the size of the output should be
-    N, C, H, W = x_shape
+    N, H, W = x_shape
     assert (H + 2 * padding - field_height) % stride == 0
     assert (W + 2 * padding - field_height) % stride == 0
     out_height = (H + 2 * padding - field_height) // stride + 1
@@ -127,14 +127,14 @@ def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
     i0 = np.repeat(np.arange(field_height), field_width)
     print ('io===', i0.shape)
 
-    i0 = np.tile(i0, C)
+    i0 = np.tile(i0, 1)
     print ('io===', i0.shape)
 
     i1 = stride * np.repeat(np.arange(out_height), out_width)
 
     print ('io===', i1.shape)
 
-    j0 = np.tile(np.arange(field_width), field_height * C)
+    j0 = np.tile(np.arange(field_width), field_height * 1)
 
     print ('io===', j0.shape)
 
@@ -142,7 +142,7 @@ def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
     i = i0.reshape(-1, 1) + i1.reshape(1, -1)
     j = j0.reshape(-1, 1) + j1.reshape(1, -1)
 
-    k = np.repeat(np.arange(C), field_height * field_width).reshape(-1, 1)
+    k = np.repeat(np.arange(1), field_height * field_width).reshape(-1, 1)
     print('io===', j.shape)
     print('io===', i.shape, k.shape)
 
@@ -153,11 +153,13 @@ def im2col_indices(x, field_height, field_width, padding=1, stride=1):
     """ An implementation of im2col based on some fancy indexing """
     # Zero-pad the input
     p = padding
-    x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
+#    x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
 
     k, i, j = get_im2col_indices(x.shape, field_height, field_width, padding,
                                  stride)
-    cols = x_padded[:, k, i, j]
+
+    print(x.shape, i.shape, j.shape, k.shape)
+    cols = x[:, j, i]
 
     print('cols===', cols.shape)
     C = x.shape[1]
@@ -166,27 +168,21 @@ def im2col_indices(x, field_height, field_width, padding=1, stride=1):
     return cols.reshape(field_height * field_width * C, -1)
 
 
-def run_img(arr, w, b, conv_param, img_size, to_benchmark):
-    start = time.time()
+def run_img(arr, img_size):
 
     dir = os.listdir(arr[0])
-    x = np.zeros((len(dir), 3, img_size, img_size))
+    x = np.zeros((len(dir), img_size, img_size))
     for idx, img in enumerate(dir):
         im = io.imread(arr[0] + "/" + img)
-        x[idx, :, :, :] = imresize(im, (img_size, img_size)).transpose((2, 0, 1))
-
-    print('xx====', x.shape)
-    out, cache = to_benchmark(x, w, b, conv_param)
-
-    end = time.time()
-    print((end - start) // 60)
-    return x, out, cache
+        img = color.rgb2gray(im)
+        x[idx, :, :] = imresize(img, (img_size, img_size))
+    return x
 
 
 def conv_forward_naive2(x, w, b, conv_param):
-    print("VECTORIZE")
-    N, C, H, W = x.shape
-    F, _, HH, WW = w.shape
+    print("VECTORIZE", x.shape)
+    N, H, W = x.shape
+    m, HH, WW = w.shape
 
     print('shapeeee=====', x.shape, w.shape)
     stride = conv_param.get('stride', 1)
@@ -197,77 +193,43 @@ def conv_forward_naive2(x, w, b, conv_param):
 
     H_prime = 1 + (H + 2 * pad - HH) // stride
     W_prime = 1 + (W + 2 * pad - WW) // stride
-    # Padding
-    x_pad = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)),
-                   'constant', constant_values=0)
-    # Construct output
-    X_col = im2col_indices(x, w.shape[2], w.shape[3],
-                           conv_param['stride'], conv_param['pad'])
 
-
-    print('xcol==', X_col.shape)
-    W_col = w.reshape(F, -1)
-
-    print('wcol', W_col.shape)
-    out = X_col.T @ W_col.T
-    out = out.reshape(2, H_prime, W_prime, N)
-    out = out.transpose(3, 0, 1, 2)
-    kernel = np.flipud(np.fliplr(kernel))    # Flip the kernel
-    output = np.zeros_like(image)            # convolution output
+    kernel = np.flipud(np.fliplr(w))
+    kernel2 = np.flipud(np.fliplr(w[1])) # Flip the kernel
+    output = np.zeros_like(x)            # convolution output
     # Add zero padding to the input image
-    image_padded = np.zeros((image.shape[0] + 2, image.shape[1] + 2))
-    image_padded[1:-1, 1:-1] = image
-    for x in range(image.shape[1]):     # Loop over every pixel of the image
-       for y in range(image.shape[0]):
-           # element-wise multiplication of the kernel and the image
-          output[y,x]=(kernel*image_padded[y:y+3,x:x+3]).sum()
-    cache = (x, w, b, conv_param)
-    return out, cache
+    print('output ====', output.shape)
+    #image_padded = np.zeros((x.shape[0], x.shape[1] + 2, x.shape[2] + 2))
+
+    #print('padded ===', image_padded.shape)
+   # image_padded[:, 1:-1, 1:-1] = x
+
+    W_col = kernel.reshape(2, 9)
+
+    print("wcol=", W_col.shape)
+
+    X_col = x.reshape(2, x.shape[1] * x.shape[2] * x.shape[0])
+
+    print("lol==", X_col.shape)
+    print("lol==", W_col.shape)
+    test = W_col.T @ X_col
+    print("test==", test.shape)
+    out = test.reshape(9, x.shape[1], x.shape[2], N)
+    out = out.transpose(3, 0, 1, 2)
 
 
-def conv_forward_naive(x, w, b, conv_param):
-    """
-    A naive implementation of the forward pass for a convolutional layer.
-    The input consists of N data points, each with C channels, height H and width
-    W. We convolve each input with F different filters, where each filter spans
-    all C channels and has height HH and width HH.
-    Input:
-    - x: Input data of shape (N, C, H, W)
-    - w: Filter weights of shape (F, C, HH, WW)
-    - b: Biases, of shape (F,)
-    - conv_param: A dictionary with the following keys:
-      - 'stride': The number of pixels between adjacent receptive fields in the
-        horizontal and vertical directions.
-      - 'pad': The number of pixels that will be used to zero-pad the input.
-    Returns a tuple of:
-    - out: Output data, of shape (N, F, H', W') where H' and W' are given by
-      H' = 1 + (H + 2 * pad - HH) / stride
-      W' = 1 + (W + 2 * pad - WW) / stride
-    - cache: (x, w, b, conv_param)
-    """
-
-    N, C, H, W = x.shape
-    F, _, HH, WW = w.shape
-
-    print('shapeeee=====', x.shape, w.shape)
-    stride = conv_param.get('stride', 1)
-    pad = conv_param.get('pad', 0)
-    assert (H + 2 * pad - HH) % stride == 0, 'Sanity Check Status: Conv Layer Failed in Height'
-    assert (W + 2 * pad - WW) % stride == 0, 'Sanity Check Status: Conv Layer Failed in Width'
-    H_prime = 1 + (H + 2 * pad - HH) // stride
-    W_prime = 1 + (W + 2 * pad - WW) // stride
-    x_pad = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)), 'constant', constant_values=0)
-    out = np.zeros((N, F, H_prime, W_prime))
-
-    for n in range(N):
-        for f in range(F):
-            for j in range(0, H_prime):
-                for i in range(0, W_prime):
-                    out[n, f, j, i] = (x_pad[n, :, j*stride:j*stride+HH,
-                                       i*stride:i*stride+WW] * w[f, :, :, :]).sum() + b[f]
+    print('test==', test.shape, out.shape)
+    #
+    # for idx, img in enumerate(x):
+    #     for l in range(x.shape[1]):     # Loop over every pixel of the image
+    #         for y in range(400):
+    #             output[idx, y, l] =\
+    #                 (kernel*image_padded[idx, y:y+3, l:l+3]).sum()
 
     cache = (x, w, b, conv_param)
-    return out, cache
+
+    print('out==', output.shape)
+    return output, cache, out
 
 
 def imshow_noax(img, normalize=True):
@@ -293,6 +255,7 @@ if __name__ == "__main__":
                     "data/train/sports_equipment",
                     "data/train/toys-games"])
 
+    w = np.zeros((2, 3, 3))
     w = np.zeros((2, 3, 3, 3))
 
     # The first filter converts the image to grayscale.
@@ -300,53 +263,24 @@ if __name__ == "__main__":
     w[0, 0, :, :] = [[0, 0, 0], [0, 0.3, 0], [0, 0, 0]]
     w[0, 1, :, :] = [[0, 0, 0], [0, 0.6, 0], [0, 0, 0]]
     w[0, 2, :, :] = [[0, 0, 0], [0, 0.1, 0], [0, 0, 0]]
-
-    # Second filter detects horizontal edges in the blue channel.
     w[1, 2, :, :] = [[1, 2, 1], [0, 0, 0], [-1, -2, -1]]
-
-    # Vector of biases. We don't need any bias for the grayscale
-    #    filter, but for the edge detection filter we want to add 128
-    # to each output so that nothing is negative.
     b = np.array([0, 128])
+    w2 = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
+    w3 = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
 
-    from skimage import io, color
-    import matplotlib.pyplot as plt
-    import numpy as np
+    t = np.array((w2, w3))
+    print('w3===', w3.shape)
+    from skimage import color
     from skimage import exposure
-    import pylab
 
-    img = io.imread('image.png')    # Load the image
-    img = color.rgb2gray(img)       # Convert the image to grayscale (1 channel)
-    # Adjust the contrast of the image by applying Histogram Equalization
-    image_equalized = exposure.equalize_adapthist(img/np.max(np.abs(img)), clip_limit=0.03)
-    plt.imshow(image_equalized, cmap=plt.cm.gray)
-    plt.axis('off')
-    plt.show()
-
-    x2, lool2, c = run_img(arr, w, b, {'stride': 1, 'pad': 1},
-                           400, conv_forward_naive2)
-
-    print('ok', x2.shape, lool2.shape)
-    plt.subplot(2, 3, 1)
-
-    b = np.random.randn(2,)
-    dout = np.random.randn(4, 2, 5, 5)
+    x = run_img(arr, 400)
     conv_param = {'stride': 1, 'pad': 1}
 
-    #dx_num = eval_numerical_gradient_array(lambda x: conv_forward_naive(x2, w, b, conv_param)[0], x, dout)
-    #dw_num = eval_numerical_gradient_array(lambda w: conv_forward_naive(x2, w, b, conv_param)[0], w, dout)
-    #db_num = eval_numerical_gradient_array(lambda b: conv_forward_naive(x2, w, b, conv_param)[0], b, dout)
+    x2, l, x3 = conv_forward_naive2(x, t, b, conv_param)
 
-   # out, cache = conv_forward_naive(x2, w, b, conv_param)
-   # dx, dw, db = conv_backward_naive(dout, cache)
+#    edge = exposure.equalize_adapthist(x2[0]/np.max(np.abs(x2)),clip_limit=0.03)
 
-# Your errors should be around 1e-9'
-    #print ('Testing conv_backward_naive function', dx.shape, dw.shape, db.shape)
-   # print ('dx error: ', rel_error(dx, dx_num))
-   # print ('dw error: ', rel_error(dw, dw_num))
-   # print ('db error: ', rel_error(db, db_num))
-    plt.subplot(2, 3, 2)
-    imshow_noax(lool2[0, 1])
-    plt.subplot(2, 3, 3)
-    imshow_noax(lool2[0, 0])
+    #plt.imshow(x2[0], cmap=plt.cm.gray)
+    plt.imshow(x3[0, 1], cmap=plt.cm.gray)
+    plt.axis('off')
     plt.show()
