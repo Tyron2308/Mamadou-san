@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="07741c82-b04c-4330-a6be-af8db2d96f81" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fuck.py" afterPath="$PROJECT_DIR$/fuck.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/img2col.py" afterPath="$PROJECT_DIR$/img2col.py" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -43,11 +43,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="fuck.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="fuck.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fuck.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="612">
-              <caret line="223" column="4" lean-forward="false" selection-start-line="223" selection-start-column="4" selection-end-line="223" selection-end-column="4" />
+            <state relative-caret-position="120">
+              <caret line="8" column="0" lean-forward="true" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
               <folding>
                 <element signature="e#0#39#0" expanded="true" />
                 <element signature="e#357#871#0" expanded="false" />
@@ -62,12 +62,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="img2col.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="img2col.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/img2col.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-              <folding />
+            <state relative-caret-position="45">
+              <caret line="13" column="0" lean-forward="false" selection-start-line="13" selection-start-column="0" selection-end-line="13" selection-end-column="0" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -101,8 +103,8 @@
         <option value="$USER_HOME$/.local/lib/python3.6/site-packages/scipy/optimize/test.py" />
         <option value="$PROJECT_DIR$/test.py" />
         <option value="$PROJECT_DIR$/Mamadou.py" />
-        <option value="$PROJECT_DIR$/img2col.py" />
         <option value="$PROJECT_DIR$/fuck.py" />
+        <option value="$PROJECT_DIR$/img2col.py" />
       </list>
     </option>
   </component>
@@ -679,18 +681,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/img2col.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/fuck.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="612">
-          <caret line="223" column="4" lean-forward="false" selection-start-line="223" selection-start-column="4" selection-end-line="223" selection-end-column="4" />
+        <state relative-caret-position="120">
+          <caret line="8" column="0" lean-forward="true" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
           <folding>
             <element signature="e#0#39#0" expanded="true" />
             <element signature="e#357#871#0" expanded="false" />
@@ -700,6 +694,16 @@
             <element signature="e#4218#5183#0" expanded="false" />
             <element signature="e#5261#5819#0" expanded="false" />
             <element signature="e#5886#6308#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/img2col.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret line="13" column="0" lean-forward="false" selection-start-line="13" selection-start-column="0" selection-end-line="13" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>

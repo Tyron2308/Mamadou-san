@@ -1,37 +1,58 @@
 import numpy as np
 
 
-def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
-    # First figure out what the size of the output should be
-    N, C, H, W = x_shape
-    assert (H + 2 * padding - field_height) % stride == 0
-    assert (W + 2 * padding - field_height) % stride == 0
-    out_height = (H + 2 * padding - field_height) / stride + 1
-    out_width = (W + 2 * padding - field_width) / stride + 1
+import numpy as np
+from scipy import linalg
+from scipy import signal
+x = np.array([0,0,1,0,0,2,0,0,0]) # 9
+h = np.array([0,1,2,0]) # 4
+y = signal.convolve(x, h, mode='same')
+print "x", x
+print "h", h
+print "y(conv):", y
 
-    i0 = np.repeat(np.arange(field_height), field_width)
-    i0 = np.tile(i0, C)
-    i1 = stride * np.repeat(np.arange(out_height), out_width)
-    j0 = np.tile(np.arange(field_width), field_height * C)
-    j1 = stride * np.tile(np.arange(out_width), out_height)
-    i = i0.reshape(-1, 1) + i1.reshape(1, -1)
-    j = j0.reshape(-1, 1) + j1.reshape(1, -1)
+padding = np.zeros(len(x)-1, h.dtype)
+first_col = np.r_[h, padding]
+first_row = np.r_[h[0], padding]
+H = linalg.toeplitz(first_col, first_row)[1:len(x)+1,:]
+print "shape", H.shape, x.shape
+y = np.sum(np.multiply(x,H), 1)
+print "y(mult):", y
+print "**********************"
+x = np.array([0,0,1,0,0,2,0,0,0]) # nsamp
+x = np.tile(x,[10,1]) # n_ex x n_samp
+h = np.array([0,1,2,0]) # n_samp
+h = np.tile(h,[10,1]) # n_ex x n_samp
+y = np.zeros([x.shape[0], x.shape[1]])
+for i in range(0,x.shape[0]):
+    y[i,:] = signal.convolve(x[i,:], h[i,:], mode='same')
+print "x", x
+print "h", h
+print "y(conv):", y
 
-    k = np.repeat(np.arange(C), field_height * field_width).reshape(-1, 1)
-
-    return (k, i, j)
 
 
-def im2col_indices(x, field_height, field_width, padding=1, stride=1):
-    """ An implementation of im2col based on some fancy indexing """
-    # Zero-pad the input
-    p = padding
-    x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
-
-    k, i, j = get_im2col_indices(x.shape, field_height, field_width, padding,
-                                 stride)
-
-    cols = x_padded[:, k, i, j]
-    C = x.shape[1]
-    cols = cols.transpose(1, 2, 0).reshape(field_height * field_width * C, -1)
-    return cols
+# # set up the toeplitz matrix
+# H = np.zeros([ x.shape[0], x.shape[1], x.shape[1] ]) # n_ex x n_samp x n_samp
+# for i in range(0,x.shape[0]):
+#     padding = np.zeros(x.shape[1]-1, h.dtype) #
+#     first_col = np.r_[h[i,:], padding] #
+#     first_row = np.r_[h[i,0], padding] #
+#     H[i,:,:] = linalg.toeplitz(first_col, first_row)[1:x.shape[1]+1,:]
+# print "H shape", H.shape
+# print H[0,:,:]
+# x = x.reshape([x.shape[0], 1, x.shape[1]])
+# x = np.tile(x, [1,x.shape[1],1])
+# y = np.sum(np.multiply(x,H), 2)
+# print "y(mult):", y
+# print "**********************"
+# h = np.array([0,1,2,3,4,5,6,7,8], dtype='int32')
+# padding = np.zeros(len(x)-1, h.dtype)
+# first_col = np.r_[h, padding]
+# first_row = np.r_[h[0], padding]
+# H = linalg.toeplitz(first_col, first_row)[1:len(x)+1,:]
+# print H
+#
+#
+# Posted in Uncategorized
+# Post navigation
