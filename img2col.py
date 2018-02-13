@@ -6,6 +6,7 @@ import skimage.io as io
 from skimage import color
 from scipy.misc import imread, imresize
 from scipy import ndimage
+from multiprocessing import Pool
 
 
 def run_img(arr, img_size):
@@ -21,8 +22,6 @@ def run_img(arr, img_size):
 
 if __name__ == "__main__":
 
-    
-
     arr = np.array(["data/train/beauty-personal_care-hygiene",
                     "data/train/clothing",
                     "data/train/communications",
@@ -37,33 +36,20 @@ if __name__ == "__main__":
 
     x = t[0]
 
-    #h = np.zeros(((x.shape[0]-w2.shape[0] + 1)**2, x.shape[0])
-    #print(w2.shape)
     padding = np.zeros((400 - 9), w2.dtype)
     padding2 = np.zeros((400 - 1), w2.dtype)
-
 
     print(padding.shape)
     first_col = np.r_[w2.flatten(), padding]
     first_row = np.r_[w2[0][0], padding2]
     p = linalg.toeplitz(first_col, first_row)
 
-
-
     print('HH===', p , p.shape)
-
-
-    #x = x.reshape([x.shape[0], 1, x.shape[1]])
-    #x = np.tile(x, [1, x.shape[1], 1])
-    # # x = x.flatten()
-
     y = np.dot(x, p)
-    # print('x====', p, p.shape, )
-    #
-    # p.reshape((400, 400, 3, 3))
-    #
-    #
-    #
+
+    p = Pool(5)
+    print(p.map(f, [1, 2, 3]))
+
     import matplotlib.pyplot as plt
     plt.imshow(y, cmap=plt.cm.gray)
     plt.axis('off')
