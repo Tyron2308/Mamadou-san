@@ -5,7 +5,6 @@ from scipy.io import loadmat
 from sklearn.preprocessing import OneHotEncoder
 
 
-
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
@@ -134,7 +133,6 @@ if __name__ == '__main__':
     y = np.matrix(y)
     params = (np.random.random(size=hidden_size * (input_size + 1) +
                                     num_labels * (hidden_size + 1)) - 0.5) * 0.25
-
 
     print(params.shape)
     # unravel the parameter array into parameter matrices for each layer

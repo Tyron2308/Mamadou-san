@@ -1,58 +1,74 @@
-import numpy as np
-
-
-import numpy as np
 from scipy import linalg
 from scipy import signal
-x = np.array([0,0,1,0,0,2,0,0,0]) # 9
-h = np.array([0,1,2,0]) # 4
-y = signal.convolve(x, h, mode='same')
-print "x", x
-print "h", h
-print "y(conv):", y
-
-padding = np.zeros(len(x)-1, h.dtype)
-first_col = np.r_[h, padding]
-first_row = np.r_[h[0], padding]
-H = linalg.toeplitz(first_col, first_row)[1:len(x)+1,:]
-print "shape", H.shape, x.shape
-y = np.sum(np.multiply(x,H), 1)
-print "y(mult):", y
-print "**********************"
-x = np.array([0,0,1,0,0,2,0,0,0]) # nsamp
-x = np.tile(x,[10,1]) # n_ex x n_samp
-h = np.array([0,1,2,0]) # n_samp
-h = np.tile(h,[10,1]) # n_ex x n_samp
-y = np.zeros([x.shape[0], x.shape[1]])
-for i in range(0,x.shape[0]):
-    y[i,:] = signal.convolve(x[i,:], h[i,:], mode='same')
-print "x", x
-print "h", h
-print "y(conv):", y
+import numpy as np
+import os
+import skimage.io as io
+from skimage import color
+from scipy.misc import imread, imresize
+from scipy import ndimage
 
 
+def run_img(arr, img_size):
 
-# # set up the toeplitz matrix
-# H = np.zeros([ x.shape[0], x.shape[1], x.shape[1] ]) # n_ex x n_samp x n_samp
-# for i in range(0,x.shape[0]):
-#     padding = np.zeros(x.shape[1]-1, h.dtype) #
-#     first_col = np.r_[h[i,:], padding] #
-#     first_row = np.r_[h[i,0], padding] #
-#     H[i,:,:] = linalg.toeplitz(first_col, first_row)[1:x.shape[1]+1,:]
-# print "H shape", H.shape
-# print H[0,:,:]
-# x = x.reshape([x.shape[0], 1, x.shape[1]])
-# x = np.tile(x, [1,x.shape[1],1])
-# y = np.sum(np.multiply(x,H), 2)
-# print "y(mult):", y
-# print "**********************"
-# h = np.array([0,1,2,3,4,5,6,7,8], dtype='int32')
-# padding = np.zeros(len(x)-1, h.dtype)
-# first_col = np.r_[h, padding]
-# first_row = np.r_[h[0], padding]
-# H = linalg.toeplitz(first_col, first_row)[1:len(x)+1,:]
-# print H
-#
-#
-# Posted in Uncategorized
-# Post navigation
+    dir = os.listdir(arr[0])
+    x = np.zeros((len(dir), img_size, img_size))
+    for idx, img in enumerate(dir):
+        im = io.imread(arr[0] + "/" + img)
+        img = color.rgb2gray(im)
+        x[idx, :, :] = imresize(img, (img_size, img_size))
+    return x
+
+
+if __name__ == "__main__":
+
+    
+
+    arr = np.array(["data/train/beauty-personal_care-hygiene",
+                    "data/train/clothing",
+                    "data/train/communications",
+                    "data/train/footwear",
+                    "data/train/household-furniture",
+                    "data/train/kitchen_merchandise",
+                    "data/train/personal_accessories",
+                    "data/train/sports_equipment",
+                    "data/train/toys-games"])
+    t = run_img(arr, 400)
+    w2 = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
+
+    x = t[0]
+
+    #h = np.zeros(((x.shape[0]-w2.shape[0] + 1)**2, x.shape[0])
+    #print(w2.shape)
+    padding = np.zeros((400 - 9), w2.dtype)
+    padding2 = np.zeros((400 - 1), w2.dtype)
+
+
+    print(padding.shape)
+    first_col = np.r_[w2.flatten(), padding]
+    first_row = np.r_[w2[0][0], padding2]
+    p = linalg.toeplitz(first_col, first_row)
+
+
+
+    print('HH===', p , p.shape)
+
+
+    #x = x.reshape([x.shape[0], 1, x.shape[1]])
+    #x = np.tile(x, [1, x.shape[1], 1])
+    # # x = x.flatten()
+
+    y = np.dot(x, p)
+    # print('x====', p, p.shape, )
+    #
+    # p.reshape((400, 400, 3, 3))
+    #
+    #
+    #
+    import matplotlib.pyplot as plt
+    plt.imshow(y, cmap=plt.cm.gray)
+    plt.axis('off')
+    plt.show()
+
+    #print ("y(mult):", y)
+
+

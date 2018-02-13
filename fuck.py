@@ -168,17 +168,6 @@ def im2col_indices(x, field_height, field_width, padding=1, stride=1):
     return cols.reshape(field_height * field_width * C, -1)
 
 
-def run_img(arr, img_size):
-
-    dir = os.listdir(arr[0])
-    x = np.zeros((len(dir), img_size, img_size))
-    for idx, img in enumerate(dir):
-        im = io.imread(arr[0] + "/" + img)
-        img = color.rgb2gray(im)
-        x[idx, :, :] = imresize(img, (img_size, img_size))
-    return x
-
-
 def conv_forward_naive2(x, w, b, conv_param):
     print("VECTORIZE", x.shape)
     N, H, W = x.shape
