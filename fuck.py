@@ -262,7 +262,7 @@ if __name__ == "__main__":
     from skimage import color
     from skimage import exposure
 
-    x = run_img(arr, 400)
+    #x = run_img(arr, 400)
     conv_param = {'stride': 1, 'pad': 1}
 
     x2, l, x3 = conv_forward_naive2(x, t, b, conv_param)
