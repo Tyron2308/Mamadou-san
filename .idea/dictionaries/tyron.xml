@@ -4,6 +4,7 @@
       <w>conv</w>
       <w>mamadou</w>
       <w>onehot</w>
+      <w>reelu</w>
       <w>vectorize</w>
     </words>
   </dictionary>

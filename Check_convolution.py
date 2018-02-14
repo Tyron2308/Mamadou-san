@@ -1,7 +1,7 @@
-from cs231n.fast_layers import conv_forward_fast, conv_backward_fast
 from time import time
 import numpy as np
 from img2col import *
+
 
 def conv_forward_naive(x, w, b, conv_param):
 
@@ -14,8 +14,8 @@ def conv_forward_naive(x, w, b, conv_param):
     # Add padding to each image
     x_pad = np.pad(x, ((0,), (0,), (P,), (P,)), 'constant')
     # Size of the output
-    Hh = 1 + (H + 2 * P - HH) / S
-    Hw = 1 + (W + 2 * P - WW) / S
+    Hh = int(1 + (H + 2 * P - HH) / S)
+    Hw = int(1 + (W + 2 * P - WW) / S)
 
     out = np.zeros((N, F, Hh, Hw))
 
@@ -68,18 +68,17 @@ if __name__ == "__main__":
     out_naive, cache_naive = conv_forward_naive(x, w, b, conv_param)
     t1 = time()
 
-    x = np.random.randn(100, 31, 31)
+    x = np.random.randn(100, 32, 32)
     w = np.random.randn(25, 3, 3)
     res = []
-    for i in range(x):
-        for k in range(w):
-            out_fast = convolution_layer(i, k)
+    for i in range(x.shape[0]):
+        for k in range(w.shape[0]):
+            out_fast = convolution_layer(x[i], w[k])
             res.append(out_fast)
 
     t2 = time()
 
-    print 'Testing conv_forward_fast:'
-    print 'Naive: %fs' % (t1 - t0)
-    print 'Fast: %fs' % (t2 - t1)
-    print 'Speedup: %fx' % ((t1 - t0) / (t2 - t1))
-    print 'Difference: ', rel_error(out_naive, out_fast)
+    print ('Testing conv_forward_fast:')
+    print ('Naive: %fs' % (t1 - t0))
+    print ('Fast: %fs' % (t2 - t1))
+    print ('Speedup: %fx' % ((t1 - t0) / (t2 - t1)))
