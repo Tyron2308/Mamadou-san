@@ -123,9 +123,9 @@ if __name__ == '__main__':
                                   (num_labels, (hidden_size + 1))))
 
     cost(params, X, y, 0.01, theta1, theta2)
-    for i in range(400):
-        j, params = backprop(params, X, y_onehot, 0.01, theta1, theta2)
-        print('j===', params)
+    #for i in range(400):
+    j, params = backprop(params, X, y_onehot, 0.01, theta1, theta2)
+       # print('j===', params)
     # while i < 400:
     #     j, params = backprop(params, 400, 2, 9, X, y_onehot, 0.01)
     #
@@ -137,3 +137,8 @@ if __name__ == '__main__':
  #   correct = [1 if a == b else 0 for (a, b) in zip(y_pred, y)]
 
   #  print(correct)
+    plt.plot(j)
+    plt.xlabel('iteration')
+    plt.ylabel('training loss')
+    plt.title('Training Loss history')
+    plt.show()
