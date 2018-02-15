@@ -45,11 +45,13 @@ def backprop(params, X, y, learning_rate, reg):
                                              params['b1'], params['b2'])
     j = 0
 
-    for i in range(m):
-        first_term = np.multiply(-y[i, :], np.log(h[i, :]))
-        second_term = np.multiply((1 - y[i, :]), np.log(1 - h[i, :]))
-        j += np.sum(first_term - second_term)
-    j = j / m
+    # for i in range(m):
+    #     first_term = np.multiply(-y[i, :], np.log(h[i, :]))
+    #     second_term = np.multiply((1 - y[i, :]), np.log(1 - h[i, :]))
+    #     j += np.sum(first_term - second_term)
+    # j = j / m
+
+    j = -(y*np.log(h) - (1-y)*np.log(1-h)**2).mean()
 
     j += (float(learning_rate) / (2 * m)) *\
          (np.sum(np.power(params['W1'][:, 1:], 2)) +
