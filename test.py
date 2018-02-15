@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.io import loadmat
 from sklearn.preprocessing import OneHotEncoder
-
+import matplotlib.pyplot as plt
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -48,11 +48,6 @@ def backprop(params, X, y, learning_rate, theta1, theta2):
     y = np.matrix(y)
 
     print(params.shape)
-
-    # theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)],
-    #                              (hidden_size, (input_size + 1))))
-    # theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):],
-    #                               (num_labels, (hidden_size + 1))))
 
     a1, z2, a2, z3, h = forward_propagate(X, theta1, theta2)
     J = 0
@@ -112,8 +107,6 @@ if __name__ == '__main__':
                                     num_labels * (hidden_size + 1)) - 0.5) * 0.25
 
     print(params.shape)
-    # unravel the parameter array into parameter matrices for each layer
-
     encoder = OneHotEncoder(sparse=False)
     y_onehot = encoder.fit_transform(y)
     i = 0
@@ -123,8 +116,11 @@ if __name__ == '__main__':
                                   (num_labels, (hidden_size + 1))))
 
     cost(params, X, y, 0.01, theta1, theta2)
-    #for i in range(400):
     j, params = backprop(params, X, y_onehot, 0.01, theta1, theta2)
+
+
+
+
        # print('j===', params)
     # while i < 400:
     #     j, params = backprop(params, 400, 2, 9, X, y_onehot, 0.01)
@@ -137,7 +133,7 @@ if __name__ == '__main__':
  #   correct = [1 if a == b else 0 for (a, b) in zip(y_pred, y)]
 
   #  print(correct)
-    plt.plot(j)
+    plt.plot(params)
     plt.xlabel('iteration')
     plt.ylabel('training loss')
     plt.title('Training Loss history')
