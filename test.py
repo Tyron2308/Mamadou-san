@@ -42,7 +42,7 @@ def sigmoid_gradient(z):
     return np.multiply(sigmoid(z), (1 - sigmoid(z)))
 
 
-def backprop(params, X, y, learning_rate, theta1, theta2):
+def backprop(params, X, y, learning_rate, reg, theta1, theta2):
     m = X.shape[0]
     X = np.matrix(X)
     y = np.matrix(y)
@@ -60,8 +60,7 @@ def backprop(params, X, y, learning_rate, theta1, theta2):
         J += np.sum(first_term - second_term)
     J = J / m
 
-    J += (float(learning_rate) / (2 * m)) *\
-         (np.sum(np.power(theta1[:, 1:], 2)) + np.sum(np.power(theta2[:, 1:], 2)))
+    J += (float(learning_rate) / (2 * m)) * reg * (np.sum(np.power(theta1[:, 1:], 2)) + np.sum(np.power(theta2[:, 1:], 2)))
 
     print(J)
     for t in range(m):
@@ -88,6 +87,35 @@ def backprop(params, X, y, learning_rate, theta1, theta2):
     params += grad
     return J, grad
 
+
+def train(x, y,
+          learning_rate=1e-3, learning_rate_decay=0.95, reg=1e-5, num_iters=100, batch_size=200):
+
+    num_train = x.shape[0]
+    params = (np.random.random(size=hidden_size * (input_size + 1) +
+                                    num_labels * (hidden_size + 1)) - 0.5) * 0.25
+    theta1 = np.matrix(np.reshape(params[:hidden_size * (input_size + 1)],
+                                  (hidden_size, (input_size + 1))))
+    theta2 = np.matrix(np.reshape(params[hidden_size * (input_size + 1):],
+              learning_rate                (num_labels, (hidden_size + 1))))
+
+    iterations_per_epoch = max(num_train / batch_size, 1)
+    loss_history = []
+    X_batch = None
+    y_batch = None
+
+    for iter in iterations_per_epoch:
+        for it in xrange(num_iters):
+            sample_indices = np.random.choice(np.arange(num_train), batch_size)
+            X_batch = x[sample_indices]
+            y_batch = y[sample_indices]
+        loss, grad = backprop(params, X_batch, y_batch, learning_rate, reg, theta1, theta2)
+        loss_history.append(loss)
+        params = grad
+        print('iteration ', it, 'loss===', loss)
+    learning_rate *= learning_rate_decay
+
+    return loss_history, params
 
 if __name__ == '__main__':
     import time
