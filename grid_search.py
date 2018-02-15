@@ -11,25 +11,29 @@ def compute_training(X_train, y_label, lr, rs, iters):
     loss, n = train(X_train, y_label, lr, rs, iters)
     y_train_pred = predict(X_train, n.params)
     acc_train = np.mean(y_label == y_train_pred)
-    return acc_train, loss, neural, (lr, rs)
+    return acc_train, loss, n, (lr, rs)
 
 
 def gridsearch_model(X_train, y_label):
-    pool = ThreadPool(5)
 
+    pool = ThreadPool(7)
     best_val = -1
     best_stats = None
-    learning_rates = [1e-2, 1e-3]
-    regularization_strengths = [0.4, 0.5, 0.6]
+    learning_rates = [1e-2, 1e-3, 0.1, 1, 0.4]
+    regularization_strengths = [0.4, 0.5, 0.6, 0.7, 0.8]
     results = {}
     iters = 1000
-
+    best_net = None
     current_thread = [] * 5
-    for lr in learning_rates:
-        for rs in regularization_strengths:
-            current_thread.append(pool.apply_async(compute_training, (X_train, y_label, lr, rs, iters)))
 
-    for idx, thread in enumerate(curr_thread):
+    for idx, lr in enumerate(learning_rates):
+        for rs in regularization_strengths:
+            print('grid search processus :', idx)
+
+            current_thread.append(pool.apply_async(compute_training,
+                                                   (X_train, y_label, lr, rs, iters)))
+
+    for idx, thread in enumerate(current_thread):
         acc_train, loss, neural, tuples = thread.get()
         results[tuples] = acc_train
 
@@ -39,9 +43,10 @@ def gridsearch_model(X_train, y_label):
             best_net = neural
 
     for lr, reg in sorted(results):
-        train_accuracy, val_accuracy = results[(lr, reg)]
-        print 'lr %e reg %e train accuracy: %f val accuracy: %f' % (lr, reg, train_accuracy)
-    print 'best validation accuracy achieved during cross-validation: %f' % best_val
+        train_accuracy = results[(lr, reg)]
+        print('lr %e reg %e train accuracy: %f'
+              % (lr, reg, train_accuracy))
+    print('best validation accuracy achieved during cross-validation: %f' % best_val)
     return {
         "best_stat": best_stats,
         "best_net": best_net,
@@ -62,6 +67,8 @@ if __name__ == '__main__':
     m = X.shape[0]
 
     encoder = OneHotEncoder(sparse=False)
+    X = np.matrix(X)
+    y = np.matrix(y)
 
-
+    gridsearch_model(X, y)
 

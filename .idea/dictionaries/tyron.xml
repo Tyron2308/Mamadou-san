@@ -3,6 +3,8 @@
     <words>
       <w>conv</w>
       <w>dscore</w>
+      <w>gridsearch</w>
+      <w>iters</w>
       <w>mamadou</w>
       <w>onehot</w>
       <w>reelu</w>

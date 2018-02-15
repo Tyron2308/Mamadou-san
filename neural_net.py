@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 class NeuralNet:
-    def __init__(self, hidden_size, num_label=9):
+    def __init__(self, hidden_size, input_size, num_label=9):
         self.params = {}
         parameter = (np.random.random(size=hidden_size * (input_size + 1) +
                                       num_label * (hidden_size + 1)) - 0.5) * 0.25
@@ -77,7 +77,7 @@ def train(x, y_onehot, learning_rate=1e-3,
     hidden_size = 25
     num_labels = 10
 
-    mamadou = NeuralNet(hidden_size, num_labels)
+    mamadou = NeuralNet(hidden_size, x.shape[1],  num_labels)
     print("num_train", num_train)
     iterations_per_epoch = int(max(num_train / batch_size, 1))
     loss_history = []
@@ -89,14 +89,13 @@ def train(x, y_onehot, learning_rate=1e-3,
             y_batch = y_onehot[sample_indices]
             loss, grad = backprop(mamadou.params, x_batch, y_batch,
                                   learning_rate, reg)
-            print('epoch number===', iteration, 'iteration=', it, 'loss===', loss)
             loss_history.append(loss)
         mamadou.params["W1"] += -learning_rate * mamadou.params["W1"]
         mamadou.params["W2"] += -learning_rate * mamadou.params["W2"]
         mamadou.params["b1"] += -learning_rate * mamadou.params["b1"]
         mamadou.params["b2"] += -learning_rate * mamadou.params["b2"]
         learning_rate *= learning_rate_decay
-        print("iteration epoch", iter, "/", iterations_per_epoch, "/n")
+        print("iteration epoch", iteration, "/", iterations_per_epoch, "/n")
 
     return loss_history, mamadou
 
