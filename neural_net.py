@@ -2,6 +2,8 @@ import numpy as np
 from scipy.io import loadmat
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
+from processing import *
+from Mamadou import *
 
 
 class NeuralNet:
@@ -9,27 +11,45 @@ class NeuralNet:
         self.params = {}
         parameter = (np.random.random(size=hidden_size * (input_size + 1) +
                                       num_label * (hidden_size + 1)) - 0.5) * 0.25
-        theta1 = np.matrix(np.reshape(parameter[:hidden_size * (input_size + 1)],
-                                      (hidden_size, (input_size + 1))))
-        theta2 = np.matrix(np.reshape(parameter[hidden_size * (input_size + 1):],
-                                      (num_label, (hidden_size + 1))))
+        print("hidden size : ", hidden_size, "input_size ",input_size)
+        theta1 = 0.25 * np.random.rand(hidden_size, (input_size*input_size + 1))
+        theta2 = 0.25 * np.random.rand(hidden_size + 1, num_label)
+
+        print("theta", theta2.shape, theta1.shape)
         self.params['W1'] = theta1
         self.params['W2'] = theta2
-        self.params['b1'] = np.ones(hidden_size)
-        self.params['b2'] = np.ones(num_label)
+
+
+def reelu_activation(x):
+    return np.maximum(0.000000001, x)
 
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 
-def forward_propagate(x, theta1, theta2, b, b2):
-    a1 = np.insert(x, 0, np.ones(x.shape[0]), axis=1)
-    z2 = a1 * theta1.T
-    a2 = np.insert(sigmoid(z2), 0, np.ones(x.shape[0]), axis=1)
-    z3 = a2 * theta2.T
-    h = sigmoid(z3)
-    return a1, z2, a2, z3, h
+def forward_propagate(x, theta1, theta2):
+    x = np.matrix(x)
+    print("xsh", x.shape, "theta2", theta1.shape, "thetha3=", theta2.shape)
+    a1 = np.insert(x, 0, np.ones(1), axis=1)
+
+    print("x===", x.shape, a1.shape, a1.flatten().shape, theta2.shape, theta1.shape)
+    z2 = np.dot(a1, theta1.T)
+
+    print("multiplication edge * theta1", z2.shape)
+    hidden_layer = reelu_activation(z2)
+    print("hidden activer", hidden_layer.shape)
+
+    biased = np.insert(hidden_layer, 0, np.ones(1), axis=0)
+
+    print("biases ===", biased.shape)
+    last_layer = biased * theta2.T
+    print("last activer", last_layer.shape)
+
+    out = reelu_activation(last_layer)
+
+    print("out ===", out.shape)
+    return hidden_layer, last_layer, out
 
 
 def sigmoid_gradient(z):
@@ -38,49 +58,52 @@ def sigmoid_gradient(z):
 
 def backprop(params, X, y, learning_rate, reg):
     m = X.shape[0]
-    X = np.matrix(X)
-    y = np.matrix(y)
+    #X = np.matrix(X)
+    #y = np.matrix(y)
 
-    a1, z2, a2, z3, h = forward_propagate(X, params['W1'], params['W2'],
-                                             params['b1'], params['b2'])
-    j = 0
+    for k in range(X.shape[0]):
+        hidden_l, last_l, output = forward_propagate(X[k], params['W1'], params['W2'])
 
-    # for i in range(m):
-    #     first_term = np.multiply(-y[i, :], np.log(h[i, :]))
-    #     second_term = np.multiply((1 - y[i, :]), np.log(1 - h[i, :]))
-    #     j += np.sum(first_term - second_term)
-    # j = j / m
+        print("hidden_layer === ", hidden_l.shape, "last_layer", last_l.shape)
 
-    j = -(y*np.log(h) - (1-y)*np.log(1-h)**2).mean()
+        j = 0
 
-    j += (float(learning_rate) / (2 * m)) *\
-         (np.sum(np.power(params['W1'][:, 1:], 2)) +
-          np.sum(np.power(params['W2'][:, 1:], 2))) * reg
+        first_term = np.multiply(-y[k, :], np.log(output[k, :]))
+        second_term = np.multiply((1 - y[k, :]), np.log(1 - output[k, :]))
+        j += np.sum(first_term - second_term) / m
 
-    grads = {}
-    dscore = h - y
-    grads['W2'] = np.dot(a2.T, dscore)
-    grads['b2'] = np.sum(dscore, axis=0)
-    hid = np.dot(dscore, params["W2"])
+        j += (float(learning_rate) / (2 * m)) *\
+            (np.sum(np.power(params['W1'], 2)) + np.sum(np.power(params['W2'], 2)))
 
-    hid[hid <= 0] = 0
-    grads['W1'] = np.dot(X.T, hid)
-    grads['b1'] = np.sum(hid, axis=0)
+        error_sortie = output - y
 
-    grads['W2'] = reg * params["W1"]
-    grads['W1'] = reg * params["W2"]
-    return j, grads
+        out_delta = sigmoid_gradient(output.T) * error_sortie
+        print("out delta = ", out_delta.shape)
+
+        err_layer_hidden = out_delta.dot(params["W2"].T)
+        print("err layer hidden ", err_layer_hidden.shape)
+
+        p = np.insert(hidden_l, 0, np.ones(1), axis=1)
+        print(p.shape)
+        hid_delta = np.dot(err_layer_hidden, sigmoid_gradient(p.T))
+
+        print("shape====", params["W2"].shape, params["W1"].shape,
+          out_delta.shape, hid_delta.shape,
+          hidden_l.shape , last_l.shape)
+
+        params['W2'] += np.multiply(learning_rate,  np.dot(hidden_l, out_delta).T)
+        params['W1'] += np.multiply(learning_rate, np.dot(X.T, hid_delta.T))
+
+    return j, params
 
 
 def train(x, y_onehot, learning_rate=1e-3,
           learning_rate_decay=0.95, reg=1e-5, num_iters=100, batch_size=200):
-    print('train function ')
     num_train = x.shape[0]
     hidden_size = 25
     num_labels = 10
 
     mamadou = NeuralNet(hidden_size, x.shape[1],  num_labels)
-    print("num_train", num_train)
     iterations_per_epoch = int(max(num_train / batch_size, 1))
     loss_history = []
 
@@ -92,10 +115,7 @@ def train(x, y_onehot, learning_rate=1e-3,
             loss, grad = backprop(mamadou.params, x_batch, y_batch,
                                   learning_rate, reg)
             loss_history.append(loss)
-        mamadou.params["W1"] += -learning_rate * mamadou.params["W1"]
-        mamadou.params["W2"] += -learning_rate * mamadou.params["W2"]
-        mamadou.params["b1"] += -learning_rate * mamadou.params["b1"]
-        mamadou.params["b2"] += -learning_rate * mamadou.params["b2"]
+
         learning_rate *= learning_rate_decay
         print("iteration epoch", iteration, "/", iterations_per_epoch, "/n")
 
@@ -103,60 +123,36 @@ def train(x, y_onehot, learning_rate=1e-3,
 
 
 def predict(x, params):
-    x_ = np.insert(x, 0, np.ones(x.shape[0]), axis=1)
-    a1 = np.dot(x_, params["W1"].T) + params["b1"]
-    a2 = np.insert(np.maximum(a1, 0), 0, np.ones(x.shape[0]), axis=1)
-    score = np.dot(a2, params["W2"].T)
+    #x_ = np.insert(x, 0, np.ones(x.shape[0]), axis=1)
+    a1 = np.dot(x, params["W1"].T) + params["b1"]
+    a2 = np.maximum(a1, 0)
+    score = np.dot(a2, params["W2"])
     return np.argmax(score, axis=1)
 
 
 if __name__ == '__main__':
-    import time
-    start = time.time()
-    data = loadmat('ex3/ex3data1.mat')
-    X = data['X']
-    y = data['y']
 
-    Z = data['X'][4000:]
-    z_out = data['y'][4000:]
-    input_size = 400
-    m = X.shape[0]
+    arr = numpy.array(["data/train/beauty-personal_care-hygiene",
+                       "data/train/clothing",
+                       "data/train/communications",
+                       "data/train/footwear",
+                       "data/train/household-furniture",
+                       "data/train/kitchen_merchandise",
+                       "data/train/personal_accessories",
+                       "data/train/sports_equipment",
+                       "data/train/toys-games"])
+    helper = Helper(arr)
+    #X = run_img(400)
 
-    encoder = OneHotEncoder(sparse=False)
-    losses, neural = train(X, encoder.fit_transform(y))
-    import random
+    label, img = OnehotEncoder(len(arr)).to_onehot(helper.vector_input)
 
-    X = np.matrix(X)
-    y = np.matrix(y)
+    print(img.shape, label.shape)
 
-    T = np.array([X[0],X[2990],X[3440],X[1230],X[10],X[870],X[4560],X[45]])
-    yy = np.array([y[0],y[2990],y[3440],y[1230],y[10],y[870],y[4560],y[45]])
+    losses, neural = train(img, label)
 
-    print(X.shape, T.shape)
-#    sample_indices = np.random.choice(np.arange(T.shape[0]), 2000)
+    y_pred = predict(img.ravel(), neural.params)
+    correct = [1 if a == b else 0 for (a, b) in zip(y_pred, y)]
+    valid = correct[correct == 1]
+    false = correct[correct == 0]
 
-  #  validation = T[sample_indices]
-  #  hat = E[sample_indices]
- #   print("sample_indice===", sample_indices.shape, validation.shape)
-
-    y_pred = predict(X[0], neural.params)
-    y_pred1 = predict(X[2990], neural.params)
-    y_pred2 = predict(X[3440], neural.params)
-    y_pred3 = predict(X[1230], neural.params)
-    y_pred4 = predict(X[10], neural.params)
-    y_pred5 = predict(X[870], neural.params)
-    y_pred6 = predict(X[4560], neural.params)
-    y_pred7 = predict(X[45], neural.params)
-
-    print('fin===', y_pred, y_pred1, y_pred3, y_pred4, y_pred5, y_pred6, y_pred7,
-          "z====",  y[0], y[2990], y[3440], y[1230], y[10], y[870], y[4560], y[45])
-
-#    y_pred = np.array(np.argmax(h, axis=1) + 1)
- #   correct = [1 if a == b else 0 for (a, b) in zip(y_pred, y)]
-
-  #  print(correct)
-    #plt.plot(params)
-    plt.xlabel('iteration')
-    plt.ylabel('training loss')
-    plt.title('Training Loss history')
-    plt.show()
+    print("valid and false ==", valid, false, correct)

@@ -6,6 +6,8 @@ import traceback
 import sys
 import skimage.io as io
 import matplotlib.pyplot as plt
+from skimage import color
+from scipy.misc import imresize
 
 
 class OnehotEncoder:
@@ -77,10 +79,10 @@ class Helper:
                 arr_txt = os.listdir(path_arr[0])
                 vector_input = [] * (len(arr_txt) + 1)
                 g = lambda x, data: x.get(data)
-                for img in arr_txt:
-                    img = numpy.array(io.imread(path_arr[0] + "/" + img),
-                                      dtype=numpy.float64)
-                    vector_input.append((g(dictionary, path_arr[0]), img))
+                for idx, img in enumerate(arr_txt):
+                    img = io.imread(path_arr[0] + "/" + img)
+                    im = color.rgb2gray(img)
+                    vector_input.append((g(dictionary, path_arr[0]), im))
                 vector_feature.append(vector_input)
                 return self.vectorize_features(path_arr[1:], dictionary, count + 1,
                                                vector_feature)
@@ -104,197 +106,6 @@ class Helper:
         self.vector_input = self.vectorize_features(array_path, dict(reverse),
                                                     0, [] * (len(array_path) + 1))
         print(self.vector_input.shape)
-
-
-class Mamadou:
-
-    def __init__(self):
-        self.mamadou = LightCNN(5, 5, 3)
-
-    @staticmethod
-    def load_weight(filename="weight.pkl"):
-        try:
-            file = open(filename, 'wb')
-            weight = pickle.load(file)
-        except OSError:
-            tb = sys.exc_info()[-1]
-            stk = traceback.extract_tb(tb, 1)
-            name = stk[0][2]
-            print('The failing function was', name)
-            raise RuntimeError
-        return weight
-
-    @staticmethod
-    def save_weight(filename):
-        try:
-            pickle.dump(filename)
-        except OSError:
-            tb = sys.exc_info()[-1]
-            stk = traceback.extract_tb(tb, 1)
-            name = stk[0][2]
-            print('The failing function was', name)
-            raise RuntimeError
-
-    def train(self, train_test, iter_max, pass_to_execute, label):
-        idx = 0
-        print('LABEL ', label.shape)
-        output = []
-        c = []
-        while idx < iter_max:
-            for count, img in enumerate(train_test):
-                print('image number', count)
-                test = numpy.matrix(Helper.rgb2gray(img))
-                print('test===', test, 'imgg====', img)
-                print(test.shape)
-                output1, cost = pass_to_execute(test, label[count])
-                output[count] = numpy.reshape(output1, img.shape)
-                c.append(cost)
-            idx = idx + 1
-    #    c1 = self.mamadou.neural.replace_zeroes(numpy.array(c))
-    #    c2 = numpy.reshape(c1, (2, 25000))
-
-        print('weight===', self.mamadou.neural.weight)
-        #print('cost====', c2, c2.shape)
-        #plt.plot(c2)
-        #plt.ylabel(train_test[0])
-        #plt.show()
-
-    def predict(self, input_map):
-        output = self.mamadou.neural.replace_zeroes(input_map)
-        weight_tmp = self.mamadou.neural.weight
-        reshaped = numpy.reshape(weight_tmp, (2, 5, 5, 3))
-        a1 = numpy.dot(numpy.transpose(reshaped[0]), output)
-        output = self.mamadou.neural.replace_zeroes(a1)
-        activated = Opti.reelu_activation2(output)
-        a1 = numpy.dot(numpy.transpose(reshaped[1]), activated)
-        output = self.mamadou.neural.replace_zeroes(a1)
-        probability = Opti.reelu_activation2(output)
-        v = self.mamadou.softmax(probability)
-
-        print('response softmax', v)
-        return numpy.max(v)
-
-    def forward_pass(self, input_map, labels):
-        output = self.mamadou.conv_layer(input_map, Opti.reelu_activation2)
-        output = self.mamadou.conv_layer(output, Opti.reelu_activation2)
-        output = self.mamadou.pool_layer(output, True)
-        output, cost = self.mamadou.dense_layer(output, labels, Opti.sigmoid, 0.01, 0.01)
-        return output, cost
-
-    ###TODO: miss implem
-    def backward_pass(self, input_map, lab):
-        print('ok')
-        return input_map
-
-
-class LightNN:
-
-    def __init__(self, sze_input, number_hidden):
-        params = (numpy.random.random(number_hidden * (sze_input + 1) + 10 * (number_hidden +1)))
-
-        print(params.shape)
-        self.weight = numpy.random.random_sample((number_hidden, sze_input))
-
-        self.theta1 = numpy.random.rand(5, 26)
-        self.theta2 = numpy.random.rand(9, 26)
-
-
-        return
-
-    @staticmethod
-    def replace_zeroes(data):
-        min_nonzero = numpy.zeros_like(data)
-        where_nan = numpy.isnan(data)
-        data[where_nan] = 0
-        data = numpy.where(data > 0, data, min_nonzero)
-        data[data == 0] = 0.0000000001
-        max_number = numpy.ones(data.shape)
-        data = numpy.where(data>1, data, max_number)
-        return data
-
-    @staticmethod
-    def numpy_minmax(x):
-        xmin = x.min(axis=0)
-        return (x - xmin) / (x.max(axis=0) - xmin)
-
-    def cost_gradient(self, input_map, label, learning_rate, lamba):
-        vec = [] * 400
-        reg = (lamba / len(input_map)) * sum(self.weight ** 2)
-        loss = [] * 100
-        grad = []
-
-        print ('LEN', len(label), label.shape)
-        for isx, img in enumerate(input_map):
-            loss.append(img - label)
-            cost = numpy.sum(numpy.array(loss) ** 2) / 2 / len(input_map)
-            print('labe===l ', label.shape, input_map.shape, numpy.array(loss).shape, input_map)
-            cost2 = numpy.sum(numpy.multiply(-label[isx], numpy.log(img))
-                          - numpy.multiply((1 - label[isx]), numpy.log(1 - img)))
-            vec.append(cost * 1000)
-            print('COST====', cost, 'COST2====', cost2)
-            grad.append(numpy.sum(numpy.dot(input_map, numpy.array(loss))) / len(input_map) + reg)
-            print('grad shape', numpy.array(grad).shape)
-        self.weight -= learning_rate * numpy.reshape(numpy.array(grad), input_map.shape)
-        return input_map, vec
-
-    def pute(self, i, label, lamba, learning):
-        import scipy.optimize as opt
-        result = opt.fmin_tnc(func=self.cost_gradient, x0=self.weight,
-                              fprime=self.cost_gradient,
-                              args=(i, label, lamba))
-        print('RESULT===>', result[0])
-
-    def back_propagation(self, input_map, label, lamba, reverse):
-        #print ("backpropagation", self.weight)
-        input_map = numpy.reshape(input_map, label.shape)
-        delta_scrip = label - input_map
-        index = 2
-        delta_curr = delta_scrip
-        i = 0
-        weight_grad = numpy.zeros_like(self.weight)
-        delta_erra = []
-        while index > 1:
-            v = numpy.reshape(reverse[index - 1], self.weight[0].shape)
-            c = numpy.reshape(delta_curr, self.weight[0].shape)
-            t = numpy.dot(self.weight[index - 1], c)
-            e = numpy.dot(t, v)
-            #print('z score activation====', reverse[index - 1])
-            #print('weight shape weight ==>', self.weight, self.weight[index - 1])
-            #print('t', e.shape, self.weight[index - 1].shape, c.shape, v.shape)
-            delta_erra.append(e)
-            #print('reverse shape', len(reverse[index - 1]))
-            #print('len delta===', delta_erra[i].shape)
-            weight_grad[index - 1] = weight_grad[index - 1] + delta_erra[i] * reverse[index - 1]
-            i += 1
-            weight_grad[index - 1] /= len(input_map)
-            weight_grad[index - 1] += lamba / len(input_map) * self.weight[index - 1]
-            index -= 1
-        self.weight = weight_grad
-        return self.weight
-
-    @staticmethod
-    def flatten_layer(X):
-        return numpy.reshape(X, (numpy.prod(X.shape[:])))
-
-    def forward_propagation(self, input_, activation_function, tmp):
-        print('fwd')
-        m = input_.shape[0]
-
-        a1prime = numpy.dot(self.theta1.T, input_)
-
-
-        print('ok===',self.theta1.shape, self.theta2.shape, input_.shape, a1prime.shape)
-        activatedprime = activation_function(a1prime)
-        tmp.append(activatedprime)
-
-        print(self.theta2)
-       # test = numpy.insert(self.theta2, 0, 1, axis=1)
-
-      #  print(test.shape)
-        a1prime = numpy.dot(self.theta2, activatedprime)
-        t1 = activation_function(a1prime)
-        print(t1.shape)
-        return t1
 
 
 class LightCNN:
@@ -354,7 +165,6 @@ class LightCNN:
 
 
 if __name__ == '__main__':
-    mamadou = Mamadou()
 
     arr = numpy.array(["data/train/beauty-personal_care-hygiene",
                      "data/train/clothing",
@@ -369,4 +179,3 @@ if __name__ == '__main__':
     label, img = OnehotEncoder(len(arr)).to_onehot(helper.vector_input)
 
     print(len(label))
-    mamadou.train(img, 500, mamadou.forward_pass, label)

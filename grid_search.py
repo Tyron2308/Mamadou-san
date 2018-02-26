@@ -4,6 +4,7 @@ from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 from neural_net import *
 from multiprocessing.pool import ThreadPool
+from processing import *
 
 
 def compute_training(X_train, y_label, lr, rs, iters):
@@ -19,7 +20,7 @@ def gridsearch_model(X_train, y_label):
     pool = ThreadPool(7)
     best_val = -1
     best_stats = None
-    learning_rates = [1e-2, 1e-3, 0.1, 1, 0.4]
+    learning_rates = [1e-2, 1e-3, 1e-1, 1]
     regularization_strengths = [0.4, 0.5, 0.6, 0.7, 0.8]
     results = {}
     iters = 1000
@@ -28,7 +29,6 @@ def gridsearch_model(X_train, y_label):
 
     for idx, lr in enumerate(learning_rates):
         for rs in regularization_strengths:
-            print('grid search processus :', idx)
 
             current_thread.append(pool.apply_async(compute_training,
                                                    (X_train, y_label, lr, rs, iters)))
